@@ -1,7 +1,7 @@
 
 # address-lookup-file-download-lambda-function
 
-This is a placeholder README.md for a new repository
+A lambda function that downloads files from Ordnance Survey.
 
 ### License
 
