@@ -8,8 +8,8 @@ class AddressLookupFileDownloadFunction extends RequestHandler[String,  util.Map
   override def handleRequest(input: String, context: Context): util.Map[String,  util.List[String]] = {
 //    val bucket = System.getenv("BUCKET_NAME") //Do we need this as files should be downloaded to EFS?
 //    val region = System.getenv("AWS_REGION") //Ditto - no need to reference this anywhere?
-//    val user = AddressLookupFileDownloadFunction.retrieveCredential("address_lookup_file_download_user")
-//    val password = AddressLookupFileDownloadFunction.retrieveCredential("address_lookup_file_download_password")
+//    val user = AddressLookupFileDownloadFunction.retrieveCredential("address_lookup_file_download_user")address_lookup_user
+//    val password = AddressLookupFileDownloadFunction.retrieveCredential("address_lookup_password")
 
     //TODO: Actually download the file
 
@@ -20,7 +20,7 @@ class AddressLookupFileDownloadFunction extends RequestHandler[String,  util.Map
 object AddressLookupFileDownloadFunction {
   val context: java.util.HashMap[String,String] = {
     val hm = new util.HashMap[String,String]()
-    hm.put("role", "address-lookup-file-download")
+    hm.put("role", "address-lookup")
     hm
   }
 
