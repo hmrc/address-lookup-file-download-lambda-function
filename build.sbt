@@ -16,5 +16,6 @@ ThisBuild / libraryDependencies ++= Seq(
   "com.github.lookfirst" % "sardine" % "5.7",
   "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
-  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion
+  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
+  "com.github.pureconfig" %% "pureconfig" % "0.14.0"
 )

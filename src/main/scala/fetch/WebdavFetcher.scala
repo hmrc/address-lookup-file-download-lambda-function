@@ -27,12 +27,11 @@ class WebdavFetcher(factory: SardineWrapper, val downloadFolder: File, status: L
 
   // Downloads a specified set of remote files, marks them all with a completion marker (.done),
   // then returns the total bytes copied.
-  def fetchList(product: OSGBProduct, outputPath: String, continuer: Continuer, forceFetch: Boolean): List[DownloadItem] = {
+  def fetchList(product: OSGBProduct, outputPath: String, forceFetch: Boolean): List[DownloadItem] = {
     status.log(s"Product bundle: $product")
     val outputDirectory = resolveAndMkdirs(outputPath)
     val sardine = factory.begin
-    for (webDavFile <- product.zips
-         if continuer.isBusy) yield {
+    for (webDavFile <- product.zips) yield {
       fetchFile(webDavFile.url, sardine, outputDirectory, forceFetch)
     }
   }
@@ -42,7 +41,7 @@ class WebdavFetcher(factory: SardineWrapper, val downloadFolder: File, status: L
     new URL(myUrl.getProtocol, myUrl.getHost, myUrl.getPort, res.getHref.getPath)
   }
 
-  private def fetchFile(url: URL, sardine: Sardine, outputDirectory: File, forceFetch: Boolean): DownloadItem = {
+  def fetchFile(url: URL, sardine: Sardine, outputDirectory: File, forceFetch: Boolean = true): DownloadItem = {
     val file = fileOf(url)
     val outFile = DownloadedFile(outputDirectory, file)
     if (forceFetch || !outFile.exists || outFile.isIncomplete) {

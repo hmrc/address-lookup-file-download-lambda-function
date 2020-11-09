@@ -26,12 +26,12 @@ import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClientBuilder}
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
-class SardineWrapper(val url: URL, username: String, password: String, proxyAuthInfo: Option[SardineAuthInfo], factory: SardineFactory2) {
+class SardineWrapper(val url: URL, username: String, password: String, factory: SardineFactory2) {
 
-  def begin: Sardine = factory.begin(targetAuthInfo, proxyAuthInfo)
+  def begin: Sardine = factory.begin(targetAuthInfo)
 
   def exploreRemoteTree: WebDavTree = {
-    val sardine = factory.begin(targetAuthInfo, proxyAuthInfo)
+    val sardine = factory.begin(targetAuthInfo)
     val s = url.getProtocol + "://" + url.getAuthority
     WebDavTree(exploreRemoteTree(s, url, sardine))
   }
@@ -84,25 +84,19 @@ object SardineWrapper {
   val dataFileExtensions = Set(".zip", ".csv")
 }
 
-
 class SardineFactory2 {
-  def begin(targetAuthInfo: SardineAuthInfo, proxyAuthInfo: Option[SardineAuthInfo]): Sardine = {
-    new SardineImpl2(targetAuthInfo, proxyAuthInfo)
+  def begin(targetAuthInfo: SardineAuthInfo): Sardine = {
+    new SardineImpl2(targetAuthInfo)
   }
 }
 
-class SardineImpl2(targetAuthInfo: SardineAuthInfo, proxyAuthInfo: Option[SardineAuthInfo])
+class SardineImpl2(targetAuthInfo: SardineAuthInfo)
   extends com.github.sardine.impl.SardineImpl() {
 
   protected override def configure(selector: ProxySelector, credentials: CredentialsProvider): HttpClientBuilder = {
     val cp: CredentialsProvider = new BasicCredentialsProvider
 
     cp.setCredentials(targetAuthInfo.authscope, targetAuthInfo.credentials)
-
-    proxyAuthInfo match {
-      case Some(a) => cp.setCredentials(a.authscope, a.credentials)
-      case None =>
-    }
 
     super.configure(selector, credentials).setDefaultCredentialsProvider(cp)
   }
