@@ -17,5 +17,6 @@ ThisBuild / libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
-  "com.github.pureconfig" %% "pureconfig" % "0.14.0"
+  "com.github.pureconfig" %% "pureconfig" % "0.14.0",
+  "com.jsuereth" %% "scala-arm" % "2.0"
 )

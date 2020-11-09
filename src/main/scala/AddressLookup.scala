@@ -8,11 +8,13 @@ import fetch.{SardineFactory2, SardineWrapper, WebdavFetcher}
 import pureconfig._
 import pureconfig.generic.auto._
 
+import scala.io.Source
+
 object AddressLookup {
 
   case class HFSConfig(url: URL, userKey: String, passwordKey: String, productTypes: Seq[String])
 
-  case class AddressLookupConfig(hfs: HFSConfig, outputPath: File)
+  case class AddressLookupConfig(hfs: HFSConfig, outputPath: File, epochFile: File)
 
   case class AppConfig(addressLookup: AddressLookupConfig)
 
@@ -31,6 +33,15 @@ object AddressLookup {
       retrieveCredential(addressLookup.hfs.userKey),
       retrieveCredential(addressLookup.hfs.passwordKey)
     )
+  }
+
+  // This tried to read the version file and falls back to 1
+  def currentEpoch: Int = {
+    import resource._
+    managed(Source.fromFile(appConfig.addressLookup.epochFile))
+      .map(vf => vf.getLines().take(1).mkString.toInt)
+      .opt
+      .getOrElse(1)
   }
 
   val context: java.util.HashMap[String, String] = {
