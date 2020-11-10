@@ -1,35 +1,20 @@
 import java.io.File
 import java.net.URL
-import java.util
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.jessecoyle.JCredStash
 import fetch.{SardineFactory2, SardineWrapper, WebdavFetcher}
-import pureconfig._
-import pureconfig.generic.auto._
 
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 object AddressLookup {
 
-  case class HFSConfig(url: URL, userKey: String, passwordKey: String, roleKey: String, productTypes: Seq[String])
-
-  case class AddressLookupConfig(hfs: HFSConfig, outputPath: File)
-
-  case class AppConfig(addressLookup: AddressLookupConfig)
-
-  val appConfig: AppConfig = ConfigSource.default.load[AppConfig].fold(
-    e => {
-      println(s"Error reading config: $e")
-      throw new IllegalStateException(e.prettyPrint())
-    },
-    cfg => cfg
-  )
-
   def hfsUrl = new URL("https://hfs.os.uk/")
   def user = retrieveCredential("address_lookup_user")
   def password = retrieveCredential("address_lookup_password")
   def role = "address_lookup_file_download"
+  def outputPath = new File("/mnt/efs")
+  def productTypes = Seq("abp", "abi")
 
   val context: java.util.Map[String, String] = {
     println(s"Setting role to $role")
@@ -46,6 +31,6 @@ object AddressLookup {
   }
 
   def webDavFetcher(ctxt: Context): WebdavFetcher = {
-    new WebdavFetcher(sardineWrapper, appConfig.addressLookup.outputPath, ctxt.getLogger)
+    new WebdavFetcher(sardineWrapper, outputPath, ctxt.getLogger)
   }
 }

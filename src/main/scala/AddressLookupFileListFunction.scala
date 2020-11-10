@@ -7,8 +7,7 @@ class AddressLookupFileListFunction extends RequestHandler[String, java.util.Map
     val remoteTree = AddressLookup.sardineWrapper.exploreRemoteTree
 
     val fileUrls = {
-      import AddressLookup.appConfig.addressLookup.hfs
-      hfs.productTypes.flatMap(p => remoteTree.findLatestFor(p))
+      AddressLookup.productTypes.flatMap(p => remoteTree.findLatestFor(p))
         .flatMap(p => p.zips)
         .map(_.url.toString)
     }
