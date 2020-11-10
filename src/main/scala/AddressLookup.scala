@@ -8,6 +8,8 @@ import fetch.{SardineFactory2, SardineWrapper, WebdavFetcher}
 import pureconfig._
 import pureconfig.generic.auto._
 
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+
 object AddressLookup {
 
   case class HFSConfig(url: URL, userKey: String, passwordKey: String, roleKey: String, productTypes: Seq[String])
@@ -24,25 +26,18 @@ object AddressLookup {
     cfg => cfg
   )
 
-  val (hfsUrl, user, password, role) = {
-    import appConfig._
-    (
-      addressLookup.hfs.url,
-      retrieveCredential(addressLookup.hfs.userKey),
-      retrieveCredential(addressLookup.hfs.passwordKey),
-      appConfig.addressLookup.hfs.roleKey
-    )
-  }
+  def hfsUrl = new URL("https://hfs.os.uk/")
+  def user = retrieveCredential("address_lookup_user")
+  def password = retrieveCredential("address_lookup_password")
+  def role = "address_lookup_file_download"
 
-  lazy val context: java.util.HashMap[String, String] = {
+  val context: java.util.Map[String, String] = {
     println(s"Setting role to $role")
-    val hm = new util.HashMap[String, String]()
-    hm.put("role", "bacs_eiscd")
-    hm
+    Map("role" -> role).asJava
   }
 
   def retrieveCredential(credName: String): String = {
-    println(s"Trying to get $credName with role $role from credstash ...")
+    println(s"Getting secret $credName in role $role")
     new JCredStash().getSecret(credName, context)
   }
 
