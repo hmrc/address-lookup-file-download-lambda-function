@@ -1,9 +1,9 @@
-import com.amazonaws.services.lambda.runtime.Context
+import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 
 import scala.collection.JavaConverters.{mapAsJavaMapConverter, seqAsJavaListConverter}
 
-class AddressLookupFileListFunction {
-  def handler(input: String, context: Context ): java.util.Map[String, java.util.List[String]] = {
+class AddressLookupFileListFunction extends RequestHandler[String, java.util.Map[String, java.util.List[String]]] {
+  override def handleRequest(input: String, context: Context): java.util.Map[String, java.util.List[String]] = {
     val remoteTree = AddressLookup.sardineWrapper.exploreRemoteTree
 
     val fileUrls = {

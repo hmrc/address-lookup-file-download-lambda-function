@@ -3,7 +3,7 @@
 
 A lambda function that downloads files from Ordnance Survey.
 
-Credstash details:
+`credstash`:
     role: address_lookup
     user: address_lookup_password
     password: address_lookup_password

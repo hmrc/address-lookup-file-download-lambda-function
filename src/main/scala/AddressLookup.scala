@@ -10,7 +10,7 @@ import pureconfig.generic.auto._
 
 object AddressLookup {
 
-  case class HFSConfig(url: URL, userKey: String, passwordKey: String, productTypes: Seq[String])
+  case class HFSConfig(url: URL, userKey: String, passwordKey: String, roleKey: String, productTypes: Seq[String])
 
   case class AddressLookupConfig(hfs: HFSConfig, outputPath: File)
 
@@ -24,22 +24,25 @@ object AddressLookup {
     cfg => cfg
   )
 
-  val (hfsUrl, user, password) = {
+  val (hfsUrl, user, password, role) = {
     import appConfig._
     (
       addressLookup.hfs.url,
       retrieveCredential(addressLookup.hfs.userKey),
-      retrieveCredential(addressLookup.hfs.passwordKey)
+      retrieveCredential(addressLookup.hfs.passwordKey),
+      appConfig.addressLookup.hfs.roleKey
     )
   }
 
-  val context: java.util.HashMap[String, String] = {
+  lazy val context: java.util.HashMap[String, String] = {
+    println(s"Setting role to $role")
     val hm = new util.HashMap[String, String]()
-    hm.put("role", "address-lookup")
+    hm.put("role", "bacs_eiscd")
     hm
   }
 
   def retrieveCredential(credName: String): String = {
+    println(s"Trying to get $credName with role $role from credstash ...")
     new JCredStash().getSecret(credName, context)
   }
 

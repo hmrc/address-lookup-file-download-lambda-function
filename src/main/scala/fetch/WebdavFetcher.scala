@@ -62,9 +62,14 @@ class WebdavFetcher(factory: SardineWrapper, val downloadFolder: File, status: L
   }
 
   private def doFetchFile(url: URL, sardine: Sardine, outFile: DownloadedFile): DownloadedFile = {
+    println(s"About to connect to HFS ...")
     val in = sardine.get(url.toExternalForm)
+    println(s"Connected to HFS")
+
     try {
+      println(s"About to copy from HFS ...")
       Files.copy(in, outFile.toPath)
+      println(s"Copied from HFS")
       outFile
     } finally {
       in.close()

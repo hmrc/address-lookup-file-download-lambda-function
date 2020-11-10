@@ -8,7 +8,9 @@ class AddressLookupFileDownloadFunction extends RequestHandler[String, Int] {
     val sardineWrapper = AddressLookup.sardineWrapper
     val webDavFetcher = AddressLookup.webDavFetcher(context)
 
+    println(s"About to download file $fileToDownload ...")
     webDavFetcher.fetchFile(new URL(fileToDownload), sardineWrapper.begin, new File("."))
+    println(s"Done downloading file $fileToDownload")
 
     // What to return here?
     0
