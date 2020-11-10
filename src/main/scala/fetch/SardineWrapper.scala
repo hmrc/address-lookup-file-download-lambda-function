@@ -95,9 +95,7 @@ class SardineImpl2(targetAuthInfo: SardineAuthInfo)
 
   protected override def configure(selector: ProxySelector, credentials: CredentialsProvider): HttpClientBuilder = {
     val cp: CredentialsProvider = new BasicCredentialsProvider
-
     cp.setCredentials(targetAuthInfo.authscope, targetAuthInfo.credentials)
-
     super.configure(selector, credentials).setDefaultCredentialsProvider(cp)
   }
 }
