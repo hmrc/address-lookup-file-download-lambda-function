@@ -20,12 +20,11 @@ import java.io.File
 import java.net.URL
 import java.nio.file._
 
-import com.amazonaws.services.lambda.runtime.LambdaLogger
 import com.github.sardine.Sardine
 
-class WebdavFetcher(factory: SardineWrapper, val downloadFolder: File, status: LambdaLogger) {
+class WebdavFetcher(factory: SardineWrapper, val downloadFolder: File) {
 
-  def fetchFile(url: URL, sardine: Sardine, outputDirectory: File, forceFetch: Boolean = true): DownloadItem = {
+  def fetchFile(url: URL, outputDirectory: File, forceFetch: Boolean = true): DownloadItem = {
     val file = fileOf(url)
     val outFile = DownloadedFile(outputDirectory, file)
     if (forceFetch || !outFile.exists || outFile.isIncomplete) {
@@ -33,14 +32,14 @@ class WebdavFetcher(factory: SardineWrapper, val downloadFolder: File, status: L
       outFile.delete()
 
       val ff = if (forceFetch) " (forced)" else ""
-      status.log(s"Fetching $url to $file$ff.")
-      val fetched = doFetchFile(url, sardine, outFile)
+      println(s"Fetching $url to $file$ff.")
+      val fetched = doFetchFile(url, factory.begin, outFile)
       outFile.touchDoneFile()
-      status.log(s"Fetched $file.")
+      println(s"Fetched $file.")
       DownloadItem.fresh(fetched)
 
     } else {
-      status.log(s"Already had $file.")
+      println(s"Already had $file.")
       DownloadItem.stale(outFile)
     }
   }

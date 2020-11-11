@@ -2,7 +2,6 @@ import java.io.File
 import java.net.URL
 import java.util.Base64
 
-import com.amazonaws.services.lambda.runtime.Context
 import com.jessecoyle.JCredStash
 import fetch.{SardineFactory2, SardineWrapper, WebdavFetcher}
 
@@ -11,7 +10,9 @@ import scala.collection.JavaConverters.mapAsJavaMapConverter
 object AddressLookup {
 
   val hfsUrl = new URL("https://hfs.os.uk/")
+
   def user = retrieveCredential("address_lookup_user")
+
   def password = new String(
     Base64.getDecoder.decode(retrieveCredential("address_lookup_password"))).trim
 
@@ -31,7 +32,19 @@ object AddressLookup {
     new SardineWrapper(hfsUrl, user, password, new SardineFactory2)
   }
 
-  def webDavFetcher(ctxt: Context): WebdavFetcher = {
-    new WebdavFetcher(sardineWrapper, outputPath, ctxt.getLogger)
+  def webDavFetcher: WebdavFetcher = {
+    new WebdavFetcher(sardineWrapper, outputPath)
+  }
+
+  def listAllFileUrlsToDownload(): Seq[String] = {
+    AddressLookup.productTypes.flatMap(p => sardineWrapper.exploreRemoteTree.findLatestFor(p))
+      .flatMap(p => p.zips)
+      .map(_.url.toString)
+  }
+
+  def downloadFileToOutputDirectory(fileUrl: String): Unit = {
+    println(s"Downloading $fileUrl")
+
+    webDavFetcher.fetchFile(new URL(fileUrl), AddressLookup.outputPath)
   }
 }
