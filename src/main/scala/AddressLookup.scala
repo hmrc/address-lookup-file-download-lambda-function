@@ -3,7 +3,7 @@ import java.net.URL
 import java.util.Base64
 
 import com.jessecoyle.JCredStash
-import fetch.{SardineFactory2, SardineWrapper, WebdavFetcher}
+import fetch.{OSGBProduct, SardineFactory2, SardineWrapper, WebdavFetcher}
 
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 
@@ -36,11 +36,8 @@ object AddressLookup {
     new WebdavFetcher(sardineWrapper, outputPath)
   }
 
-  def listAllFileUrlsToDownload(): Seq[String] = {
+  def listAllFileUrlsToDownload(): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap(p => sardineWrapper.exploreRemoteTree.findLatestFor(p))
-      .flatMap(p => p.zips)
-      .map(_.url.toString)
-  }
 
   def downloadFileToOutputDirectory(fileUrl: String): Unit = {
     println(s"Downloading $fileUrl")
