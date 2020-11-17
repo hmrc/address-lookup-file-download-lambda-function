@@ -17,7 +17,7 @@ object AddressLookup {
     Base64.getDecoder.decode(retrieveCredential("address_lookup_password"))).trim
 
   val role = "address_lookup_file_download"
-  val outputPath = new File("/mnt/efs")
+  val outputPath = "/mnt/efs"
   val productTypes = Seq("abp", "abi")
 
   val context: java.util.Map[String, String] = {
@@ -33,15 +33,15 @@ object AddressLookup {
   }
 
   def webDavFetcher: WebdavFetcher = {
-    new WebdavFetcher(sardineWrapper, outputPath)
+    new WebdavFetcher(sardineWrapper, new File(outputPath))
   }
 
   def listAllFileUrlsToDownload(): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap(p => sardineWrapper.exploreRemoteTree.findLatestFor(p))
 
-  def downloadFileToOutputDirectory(fileUrl: String): Unit = {
-    println(s"Downloading $fileUrl")
+  def downloadFileToOutputDirectory(productName: String, epoch: String, fileUrl: String): Unit = {
+    println(s"Downloading $productName, $epoch, $fileUrl")
 
-    webDavFetcher.fetchFile(new URL(fileUrl), AddressLookup.outputPath)
+    webDavFetcher.fetchFile(new URL(fileUrl), new File(s"${AddressLookup.outputPath}/$productName/$epoch"))
   }
 }

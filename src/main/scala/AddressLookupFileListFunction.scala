@@ -9,13 +9,14 @@ class AddressLookupFileListFunction extends RequestHandler[String, java.util.Lis
   override def handleRequest(input: String, context: Context): java.util.List[java.util.Map[String, Any]] =
     {
       val results = AddressLookup.listAllFileUrlsToDownload()
-        .map(p => Map(
-          "type" -> p.productName,
-          "epoch" -> p.epoch,
-          "files" -> p.zips.filterNot(z =>
-            new File(s"/mnt/efs/${p.productName}/${p.epoch}/${fileOf(z.url)}").exists()
-          ).map(_.url).asJava).asJava)
-        .filterNot(m => m.get("files").asInstanceOf[java.util.List[String]].isEmpty)
+        .flatMap { p =>
+          p.zips
+            .filterNot(z => new File(s"/mnt/efs/${p.productName}/${p.epoch}/${fileOf(z.url)}").exists())
+            .map(f => Map(
+              "productName" -> p.productName,
+              "epoch" -> p.epoch,
+              "fileUrl" -> f.url).asJava)
+        }
 
       println(results.mkString)
       results.asJava
