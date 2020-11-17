@@ -11,8 +11,7 @@ class AddressLookupFileListFunction extends RequestHandler[String, java.util.Lis
       val results = AddressLookup.listAllFileUrlsToDownload()
         .flatMap { p =>
           p.zips
-            .filterNot(z => new File(s"/mnt/efs/${p.productName}/${p.epoch}/${fileOf(z.url)}").exists())
-            .map(_.url.toString)
+            .map(_.url)
             .grouped(25)
             .zipWithIndex
             .map { case (batch, idx) =>
@@ -20,7 +19,10 @@ class AddressLookupFileListFunction extends RequestHandler[String, java.util.Lis
                 "productName" -> p.productName,
                 "epoch" -> p.epoch.toString,
                 "batchIndex" -> idx.toString,
-                "files" -> batch.asJava).asJava
+                "files" -> batch.filterNot(z =>
+                  new File(s"/mnt/efs/${p.productName}/${p.epoch}/$idx/${fileOf(z)}.done").exists()
+                ).asJava
+              ).asJava
             }
         }
 

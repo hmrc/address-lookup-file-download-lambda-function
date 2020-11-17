@@ -39,14 +39,18 @@ object AddressLookup {
   def listAllFileUrlsToDownload(): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap(p => sardineWrapper.exploreRemoteTree.findLatestFor(p))
 
-  def downloadFileToOutputDirectory(productName: String, epoch: String, batchIndex: String, fileUrl: String): Unit = {
-    println(s"Downloading $productName, $epoch, $batchIndex, $fileUrl")
-
-    val directory = new File(s"${AddressLookup.outputPath}/$productName/$epoch/$batchIndex")
+  def downloadFileToOutputDirectory(targetDirectory: String, fileUrl: String): Unit = {
+    val directory = new File(targetDirectory)
     if (!directory.exists()) {
-      directory.mkdir()
+      println("Directory does not exist, creating...")
+      directory.mkdirs()
     }
 
+    println("Beginning fetch...")
     webDavFetcher.fetchFile(new URL(fileUrl), directory)
+  }
+
+  def batchTargetDirectory(productName: String, epoch: String, batchIndex: String) = {
+    s"${AddressLookup.outputPath}/$productName/$epoch/$batchIndex"
   }
 }
