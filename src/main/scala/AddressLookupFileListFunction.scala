@@ -5,17 +5,23 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 
 import scala.collection.JavaConverters.{mapAsJavaMapConverter, seqAsJavaListConverter}
 
-class AddressLookupFileListFunction extends RequestHandler[String, java.util.List[java.util.Map[String, Any]]] {
-  override def handleRequest(input: String, context: Context): java.util.List[java.util.Map[String, Any]] =
+class AddressLookupFileListFunction extends RequestHandler[String, java.util.List[java.util.Map[String, Object]]] {
+  override def handleRequest(input: String, context: Context): java.util.List[java.util.Map[String, Object]] =
     {
       val results = AddressLookup.listAllFileUrlsToDownload()
         .flatMap { p =>
           p.zips
             .filterNot(z => new File(s"/mnt/efs/${p.productName}/${p.epoch}/${fileOf(z.url)}").exists())
-            .map(f => Map(
-              "productName" -> p.productName,
-              "epoch" -> p.epoch,
-              "fileUrl" -> f.url).asJava)
+            .map(_.url.toString)
+            .grouped(25)
+            .zipWithIndex
+            .map { case (batch, idx) =>
+              Map(
+                "productName" -> p.productName,
+                "epoch" -> p.epoch.toString,
+                "batchIndex" -> idx.toString,
+                "files" -> batch.asJava).asJava
+            }
         }
 
       println(results.mkString)
