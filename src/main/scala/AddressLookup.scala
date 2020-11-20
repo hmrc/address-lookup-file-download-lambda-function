@@ -50,7 +50,7 @@ object AddressLookup {
     webDavFetcher.fetchFile(new URL(fileUrl), directory)
   }
 
-  def batchTargetDirectory(productName: String, epoch: String, batchIndex: String) = {
+  def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int) = {
     s"${AddressLookup.outputPath}/$productName/$epoch/$batchIndex"
   }
 }
