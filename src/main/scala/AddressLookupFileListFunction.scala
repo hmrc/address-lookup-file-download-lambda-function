@@ -20,10 +20,11 @@ class AddressLookupFileListFunction extends RequestHandler[String, jMap[String, 
             .grouped(25)
             .zipWithIndex
             .map { case (batch, idx) =>
+              val batchDir = AddressLookup.batchTargetDirectory(p.productName, p.epoch, idx)
               Map(
-                "batchDir" -> AddressLookup.batchTargetDirectory(p.productName, p.epoch, idx),
+                "batchDir" -> batchDir,
                 "files" -> batch.filterNot(z =>
-                  new File(s"/mnt/efs/${p.productName}/${p.epoch}/$idx/${fileOf(z)}.done").exists()
+                  new File(s"$batchDir/${fileOf(z)}.done").exists()
                 ).asJava
               ).asJava
             }

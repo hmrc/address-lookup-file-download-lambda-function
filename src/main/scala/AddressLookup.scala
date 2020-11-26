@@ -51,6 +51,6 @@ object AddressLookup {
   }
 
   def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int) = {
-    s"${AddressLookup.outputPath}/$productName/$epoch/$batchIndex"
+    s"${AddressLookup.outputPath}/$epoch/$productName/$batchIndex"
   }
 }
