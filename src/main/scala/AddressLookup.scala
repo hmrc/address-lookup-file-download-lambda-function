@@ -36,8 +36,13 @@ object AddressLookup {
     new WebdavFetcher(sardineWrapper, new File(outputPath))
   }
 
-  def listAllFileUrlsToDownload(): Seq[OSGBProduct] =
-    AddressLookup.productTypes.flatMap(p => sardineWrapper.exploreRemoteTree.findLatestFor(p))
+  def listAllFileUrlsToDownload(epoch: String): Seq[OSGBProduct] =
+    AddressLookup.productTypes.flatMap { p =>
+      if (epoch.isEmpty)
+        sardineWrapper.exploreRemoteTree.findLatestFor(p)
+      else
+        sardineWrapper.exploreRemoteTree.findAvailableFor(p, epoch.toInt)
+    }
 
   def downloadFileToOutputDirectory(targetDirectory: String, fileUrl: String): Unit = {
     val directory = new File(targetDirectory)

@@ -7,9 +7,10 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 import scala.collection.JavaConverters.{mapAsJavaMapConverter, seqAsJavaListConverter}
 
 class AddressLookupFileListFunction extends RequestHandler[String, jMap[String, Object]] {
-  override def handleRequest(input: String, context: Context): jMap[String, Object] = {
+  override def handleRequest(requestedEpoch: String, context: Context): jMap[String, Object] = {
     // We should only ever get one epoch back from listAllFileUrlsToDownload
-    val epochResults = AddressLookup.listAllFileUrlsToDownload().groupBy(_.epoch)
+    val epochResults = AddressLookup.listAllFileUrlsToDownload(requestedEpoch).groupBy(_.epoch)
+
     val (epoch, products) = epochResults.head
 
     val results = Map(
