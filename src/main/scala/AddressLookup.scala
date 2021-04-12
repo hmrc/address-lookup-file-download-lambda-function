@@ -1,9 +1,8 @@
 import java.io.File
 import java.net.URL
 import java.util.Base64
-
-import com.jessecoyle.JCredStash
 import fetch.{OSGBProduct, SardineFactory2, SardineWrapper, WebdavFetcher}
+import me.lamouri.JCredStash
 
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 
@@ -25,7 +24,7 @@ object AddressLookup {
   }
 
   def retrieveCredential(credName: String): String = {
-    new JCredStash().getSecret(credName, context)
+    new JCredStash().getSecret("credential-store", credName, context)
   }
 
   def sardineWrapper: SardineWrapper = {

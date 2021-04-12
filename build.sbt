@@ -10,7 +10,7 @@ val jacksonVersion = "2.9.7"
 
 ThisBuild / libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-core" % "1.1.0",
-  "co.wrisk.jcredstash" % "jcredstash" % "0.0.3",
+  "me.lamouri" % "jcredstash" % "2.1.1",
   "com.github.lookfirst" % "sardine" % "5.7",
   "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
