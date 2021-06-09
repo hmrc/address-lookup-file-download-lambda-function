@@ -14,5 +14,7 @@ ThisBuild / libraryDependencies ++= Seq(
   "com.github.lookfirst" % "sardine" % "5.7",
   "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
-  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion
+  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
+  "org.scalatest" %% "scalatest" % "3.2.2" % Test,
+  "org.scalatestplus" % "mockito-3-4_2.12" % "3.1.3.0" % Test
 )

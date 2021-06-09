@@ -4,7 +4,8 @@ import java.util.Base64
 import fetch.{OSGBProduct, SardineFactory2, SardineWrapper, WebdavFetcher}
 import me.lamouri.JCredStash
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
+import java.nio.file.{Files, Paths}
+import scala.collection.JavaConverters._
 
 object AddressLookup {
 
@@ -35,6 +36,15 @@ object AddressLookup {
     new WebdavFetcher(sardineWrapper, new File(outputPath))
   }
 
+  def listAllDoneFiles(epoch: String): Seq[String] = {
+    Files.walk(Paths.get(s"$outputPath/$epoch/"))
+         .iterator().asScala
+         .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
+         .map(x => x -> x.getParent)
+         .map(x => s"${x._2.getFileName}/${x._1.getFileName}")
+         .toList
+  }
+
   def listAllFileUrlsToDownload(epoch: String): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap { p =>
       if (epoch.isEmpty)
@@ -42,6 +52,20 @@ object AddressLookup {
       else
         sardineWrapper.exploreRemoteTree.findAvailableFor(p, epoch.toInt)
     }
+
+  def listAllNewFileUrlsToDownload(epoch: String): AddressLookupFileListResponse = {
+    val products = listAllFileUrlsToDownload(epoch)
+    val filesAlreadyDownloaded = AddressLookup.listAllDoneFiles(epoch)
+    AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
+  }
+
+  def downloadFilesToOutputDirectory(targetDirectory: String, fileUrls: Seq[String]): String = {
+    fileUrls.foreach { f =>
+      println(s"Downloading $f to $targetDirectory")
+      AddressLookup.downloadFileToOutputDirectory(targetDirectory, f)
+    }
+    targetDirectory
+  }
 
   def downloadFileToOutputDirectory(targetDirectory: String, fileUrl: String): Unit = {
     val directory = new File(targetDirectory)
@@ -54,7 +78,7 @@ object AddressLookup {
     webDavFetcher.fetchFile(new URL(fileUrl), directory)
   }
 
-  def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int) = {
+  def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int): String = {
     s"${AddressLookup.outputPath}/$epoch/$productName/$batchIndex"
   }
 }

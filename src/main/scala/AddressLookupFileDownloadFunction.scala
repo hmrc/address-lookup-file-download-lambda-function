@@ -6,11 +6,6 @@ class AddressLookupFileDownloadFunction extends RequestHandler[java.util.Map[Str
     val files = batchInfo.get("files").asInstanceOf[java.util.List[String]].asScala
     val batchDir = batchInfo.get("batchDir").asInstanceOf[String]
 
-    files.foreach { f =>
-      println(s"Downloading $f to $batchDir")
-      AddressLookup.downloadFileToOutputDirectory(batchDir, f)
-    }
-
-    batchDir
+    AddressLookup.downloadFilesToOutputDirectory(batchDir, files)
   }
 }
