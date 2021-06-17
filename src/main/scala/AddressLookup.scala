@@ -1,10 +1,10 @@
-import java.io.File
-import java.net.URL
-import java.util.Base64
 import fetch.{OSGBProduct, SardineFactory2, SardineWrapper, WebdavFetcher}
 import me.lamouri.JCredStash
 
+import java.io.File
+import java.net.URL
 import java.nio.file.{Files, Paths}
+import java.util.Base64
 import scala.collection.JavaConverters._
 
 object AddressLookup {
@@ -38,11 +38,10 @@ object AddressLookup {
 
   def listAllDoneFiles(epoch: String): Seq[String] = {
     Files.walk(Paths.get(s"$outputPath/$epoch/"))
-         .iterator().asScala
-         .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
-         .map(x => x -> x.getParent)
-         .map(x => s"${x._2.getFileName}/${x._1.getFileName}")
-         .toList
+      .iterator().asScala
+      .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
+      .map(x => x.toString)
+      .toList
   }
 
   def listAllFileUrlsToDownload(epoch: String): Seq[OSGBProduct] =
@@ -56,8 +55,19 @@ object AddressLookup {
   def listAllNewFileUrlsToDownload(epoch: String): AddressLookupFileListResponse = {
     val products = listAllFileUrlsToDownload(epoch)
     val filesAlreadyDownloaded = AddressLookup.listAllDoneFiles(epoch)
-    AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
+
+    // If products is empty this means that epoch does not exist on the remote server
+    // so we try to reconstruct the batch info by looking at what we've got downloaded
+    products match {
+      case Seq() => AddressLookupFileListResponse(epoch, batchesFromDoneFiles(filesAlreadyDownloaded))
+      case _ => AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
+    }
   }
+
+  def batchesFromDoneFiles(doneFiles: Seq[String]): Seq[Batch] =
+    doneFiles
+      .map { pathAndFileName => pathAndFileName.split("/").init.mkString("/") }.toSet
+      .map { path: String => Batch(path, List()) }.toSeq
 
   def downloadFilesToOutputDirectory(targetDirectory: String, fileUrls: Seq[String]): String = {
     fileUrls.foreach { f =>
