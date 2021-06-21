@@ -3,12 +3,15 @@
 
 A lambda function that downloads files from Ordnance Survey.
 
-`credstash`:
+__credstash__:
+    
     role: address_lookup
+
     user: address_lookup_password
+
     password: address_lookup_password
     
-    These have been added to integration so far.
+These have been added to integration so far.
 
 ### License
 

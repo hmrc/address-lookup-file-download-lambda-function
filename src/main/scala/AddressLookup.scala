@@ -1,10 +1,11 @@
-import java.io.File
-import java.net.URL
-import java.util.Base64
 import fetch.{OSGBProduct, SardineFactory2, SardineWrapper, WebdavFetcher}
 import me.lamouri.JCredStash
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
+import java.io.File
+import java.net.URL
+import java.nio.file.{Files, Paths}
+import java.util.Base64
+import scala.collection.JavaConverters._
 
 object AddressLookup {
 
@@ -35,6 +36,14 @@ object AddressLookup {
     new WebdavFetcher(sardineWrapper, new File(outputPath))
   }
 
+  def listAllDoneFiles(epoch: String): Seq[String] = {
+    Files.walk(Paths.get(s"$outputPath/$epoch/"))
+      .iterator().asScala
+      .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
+      .map(x => x.toString)
+      .toList
+  }
+
   def listAllFileUrlsToDownload(epoch: String): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap { p =>
       if (epoch.isEmpty)
@@ -42,6 +51,31 @@ object AddressLookup {
       else
         sardineWrapper.exploreRemoteTree.findAvailableFor(p, epoch.toInt)
     }
+
+  def listAllNewFileUrlsToDownload(epoch: String): AddressLookupFileListResponse = {
+    val products = listAllFileUrlsToDownload(epoch)
+    val filesAlreadyDownloaded = AddressLookup.listAllDoneFiles(epoch)
+
+    // If products is empty this means that epoch does not exist on the remote server
+    // so we try to reconstruct the batch info by looking at what we've got downloaded
+    products match {
+      case Seq() => AddressLookupFileListResponse(epoch, batchesFromDoneFiles(filesAlreadyDownloaded))
+      case _ => AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
+    }
+  }
+
+  def batchesFromDoneFiles(doneFiles: Seq[String]): Seq[Batch] =
+    doneFiles
+      .map { pathAndFileName => pathAndFileName.split("/").init.mkString("/") }.toSet
+      .map { path: String => Batch(path, List()) }.toSeq
+
+  def downloadFilesToOutputDirectory(targetDirectory: String, fileUrls: Seq[String]): String = {
+    fileUrls.foreach { f =>
+      println(s"Downloading $f to $targetDirectory")
+      AddressLookup.downloadFileToOutputDirectory(targetDirectory, f)
+    }
+    targetDirectory
+  }
 
   def downloadFileToOutputDirectory(targetDirectory: String, fileUrl: String): Unit = {
     val directory = new File(targetDirectory)
@@ -54,7 +88,7 @@ object AddressLookup {
     webDavFetcher.fetchFile(new URL(fileUrl), directory)
   }
 
-  def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int) = {
+  def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int): String = {
     s"${AddressLookup.outputPath}/$epoch/$productName/$batchIndex"
   }
 }
