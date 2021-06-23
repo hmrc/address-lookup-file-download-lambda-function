@@ -37,11 +37,13 @@ object AddressLookup {
   }
 
   def listAllDoneFiles(epoch: String): Seq[String] = {
-    Files.walk(Paths.get(s"$outputPath/$epoch/"))
-      .iterator().asScala
-      .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
-      .map(x => x.toString)
-      .toList
+    val epochPath = Paths.get(s"$outputPath/$epoch/")
+    if (!epochPath.toFile.exists()) Seq()
+    else Files.walk(epochPath)
+              .iterator().asScala
+              .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
+              .map(x => x.toString)
+              .toList
   }
 
   def listAllFileUrlsToDownload(epoch: String): Seq[OSGBProduct] =
@@ -60,14 +62,14 @@ object AddressLookup {
     // so we try to reconstruct the batch info by looking at what we've got downloaded
     products match {
       case Seq() => AddressLookupFileListResponse(epoch, batchesFromDoneFiles(filesAlreadyDownloaded))
-      case _ => AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
+      case _     => AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
     }
   }
 
   def batchesFromDoneFiles(doneFiles: Seq[String]): Seq[Batch] =
     doneFiles
-      .map { pathAndFileName => pathAndFileName.split("/").init.mkString("/") }.toSet
-      .map { path: String => Batch(path, List()) }.toSeq
+        .map { pathAndFileName => pathAndFileName.split("/").init.mkString("/") }.toSet
+        .map { path: String => Batch(path, List()) }.toSeq
 
   def downloadFilesToOutputDirectory(targetDirectory: String, fileUrls: Seq[String]): String = {
     fileUrls.foreach { f =>
