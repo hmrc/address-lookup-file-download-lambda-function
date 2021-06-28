@@ -46,16 +46,18 @@ object AddressLookup {
               .toList
   }
 
-  def listAllFileUrlsToDownload(epoch: String): Seq[OSGBProduct] =
+  def listAllProductsAvailableToDownload(requestedEpoch: String): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap { p =>
-      if (epoch.isEmpty)
+      if (requestedEpoch.isEmpty)
         sardineWrapper.exploreRemoteTree.findLatestFor(p)
       else
-        sardineWrapper.exploreRemoteTree.findAvailableFor(p, epoch.toInt)
+        sardineWrapper.exploreRemoteTree.findAvailableFor(p, requestedEpoch.toInt)
     }
 
-  def listAllNewFileUrlsToDownload(epoch: String): AddressLookupFileListResponse = {
-    val products = listAllFileUrlsToDownload(epoch)
+  def listFiles(requestedEpoch: String): AddressLookupFileListResponse = {
+    val products = listAllProductsAvailableToDownload(requestedEpoch)
+    val epoch = if (requestedEpoch.nonEmpty) requestedEpoch else products.head.epoch.toString
+
     val filesAlreadyDownloaded = AddressLookup.listAllDoneFiles(epoch)
 
     // If products is empty this means that epoch does not exist on the remote server
