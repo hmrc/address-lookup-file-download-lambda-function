@@ -18,7 +18,7 @@ class AddressLookupFileListResponseSpec extends AnyWordSpec with Matchers {
         OSGBProduct("abp", epoch, List(WebDavFile(new URL("http://example.com/abp.file"), "abp.file"))),
         OSGBProduct("abi", epoch, List(WebDavFile(new URL("http://example.com/abi.file"), "abi.file"))))
 
-      val response = AddressLookupFileListResponse(epoch.toString, products)
+      val response = AddressLookupFileListResponse("", products)
 
       "create a batch for each product" in {
         response.epoch shouldBe s"$epoch"

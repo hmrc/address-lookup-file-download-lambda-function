@@ -8,21 +8,24 @@ case class AddressLookupFileListResponse(epoch: String, batches: Seq[Batch])
 case class Batch(batchDir: String, files: List[URL])
 
 object AddressLookupFileListResponse {
-  def apply(epoch: String, osgbProducts: Seq[OSGBProduct], filesAlreadyDownloaded: Seq[String] = Seq()): AddressLookupFileListResponse = {
+  def apply(requestedEpoch: String, osgbProducts: Seq[OSGBProduct], filesAlreadyDownloaded: Seq[String] = Seq()): AddressLookupFileListResponse = {
 
-    val products = osgbProducts.flatMap { p =>
-      p.zips
-       .map(_.url)
-       .grouped(25)
-       .zipWithIndex
-       .map { case (files, idx) =>
-         val batchDir = AddressLookup.batchTargetDirectory(p.productName, p.epoch, idx)
-         Batch(batchDir, files.filterNot(z =>
-           filesAlreadyDownloaded.contains(s"$batchDir/${fileOf(z)}.done")))
-       }
+    val (epoch, products) = osgbProducts.groupBy(_.epoch).head match {
+      case (e, prods) =>
+        (e.toString,
+            prods.flatMap(p =>
+              p.zips
+               .map(_.url)
+               .grouped(25)
+               .zipWithIndex
+               .map { case (files, idx) =>
+                 val batchDir = AddressLookup.batchTargetDirectory(p.productName, p.epoch, idx)
+                 Batch(batchDir, files.filterNot(z =>
+                   filesAlreadyDownloaded.contains(s"$batchDir/${fileOf(z)}.done")))
+               }))
     }
 
-    AddressLookupFileListResponse(epoch, products)
+    new AddressLookupFileListResponse(epoch, products)
   }
 
   private def fileOf(url: URL): String = {
