@@ -30,7 +30,15 @@ class SardineWrapper(val url: URL, username: String, password: String, factory: 
 
   def begin: Sardine = factory.begin(targetAuthInfo)
 
-  def exploreRemoteTree: WebDavTree = {
+  def listAllProductsAvailableToDownload(productTypes: Seq[String], epoch: Option[String]): Seq[OSGBProduct] =
+    productTypes.flatMap { p =>
+      if (epoch.isEmpty)
+        exploreRemoteTree.findLatestFor(p)
+      else
+        exploreRemoteTree.findAvailableFor(p, epoch.map(_.toInt).get)
+    }
+
+  private def exploreRemoteTree: WebDavTree = {
     val sardine = factory.begin(targetAuthInfo)
     val s = url.getProtocol + "://" + url.getAuthority
     WebDavTree(exploreRemoteTree(s, url, sardine))
