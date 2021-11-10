@@ -36,29 +36,40 @@ object AddressLookup {
     new WebdavFetcher(sardineWrapper, new File(outputPath))
   }
 
-  def listAllDoneFiles(epoch: String): Seq[String] = {
+  def listAllDoneFiles(epoch: String, redownloadFiles: Boolean): Seq[String] = {
     val epochPath = Paths.get(s"$outputPath/$epoch/")
-    if (!epochPath.toFile.exists()) Seq()
-    else Files.walk(epochPath)
-              .iterator().asScala
-              .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
-              .map(x => x.toString)
-              .toList
+
+    if (!epochPath.toFile.exists())
+      Seq()
+    else if (redownloadFiles) {
+      val (files, dirs) =
+        Files.walk(epochPath)
+             .iterator().asScala.toList
+             .partition(p => p.toFile.isFile)
+
+      files.map(f => f.toFile.delete()) ++ dirs.map(d => d.toFile.delete())
+      Seq()
+    } else
+      Files.walk(epochPath)
+           .iterator().asScala
+           .filter(s => s.toFile.isFile && s.toString.endsWith(".done"))
+           .map(x => x.toString)
+           .toList
   }
 
-  def listAllProductsAvailableToDownload(requestedEpoch: String): Seq[OSGBProduct] =
+  def listAllProductsAvailableToDownload(requestedEpoch: Option[String]): Seq[OSGBProduct] =
     AddressLookup.productTypes.flatMap { p =>
       if (requestedEpoch.isEmpty)
         sardineWrapper.exploreRemoteTree.findLatestFor(p)
       else
-        sardineWrapper.exploreRemoteTree.findAvailableFor(p, requestedEpoch.toInt)
+        sardineWrapper.exploreRemoteTree.findAvailableFor(p, requestedEpoch.map(_.toInt).get)
     }
 
-  def listFiles(requestedEpoch: String): AddressLookupFileListResponse = {
-    val products = listAllProductsAvailableToDownload(requestedEpoch)
-    val epoch = if (requestedEpoch.nonEmpty) requestedEpoch else products.head.epoch.toString
+  def listFiles(requested: AddressLookupFileListRequest): AddressLookupFileListResponse = {
+    val products = listAllProductsAvailableToDownload(requested.epoch)
+    val epoch = requested.epoch.fold(products.head.epoch.toString)(identity)
 
-    val filesAlreadyDownloaded = AddressLookup.listAllDoneFiles(epoch)
+    val filesAlreadyDownloaded = AddressLookup.listAllDoneFiles(epoch, requested.redownloadFiles)
 
     // If products is empty this means that epoch does not exist on the remote server
     // so we try to reconstruct the batch info by looking at what we've got downloaded
