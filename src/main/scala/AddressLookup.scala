@@ -54,10 +54,10 @@ object AddressLookup {
         sardineWrapper.exploreRemoteTree.findAvailableFor(p, requestedEpoch.map(_.toInt).get)
     }
 
-  def listFiles(requested: AddressLookupFileListRequest): AddressLookupFileListResponse = {
-    val products = listAllProductsAvailableToDownload(requested.epoch)
-    val epoch = requested.epoch.fold(products.head.epoch.toString)(identity)
-    val filesAlreadyDownloaded = if (requested.forceDownload) Seq() else AddressLookup.listAllDoneFiles(epoch)
+  def listFiles(requestedEpoch: Option[String], forceDownload: Boolean): AddressLookupFileListResponse = {
+    val products = listAllProductsAvailableToDownload(requestedEpoch)
+    val epoch = requestedEpoch.fold(products.head.epoch.toString)(identity)
+    val filesAlreadyDownloaded = if (forceDownload) Seq() else AddressLookup.listAllDoneFiles(epoch)
 
     // If products is empty this means that epoch does not exist on the remote server
     // so we try to reconstruct the batch info by looking at what we've got downloaded
