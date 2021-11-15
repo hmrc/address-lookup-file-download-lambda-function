@@ -18,7 +18,7 @@ class AddressLookupFileListResponseSpec extends AnyWordSpec with Matchers {
         OSGBProduct("abp", epoch, List(WebDavFile(new URL("http://example.com/abp.file"), "abp.file"))),
         OSGBProduct("abi", epoch, List(WebDavFile(new URL("http://example.com/abi.file"), "abi.file"))))
 
-      val response = AddressLookupFileListResponse(epoch.toString, products)
+      val response = AddressLookupFileListResponse(epoch.toString, products, batchTargetDirectory)
 
       "create a batch for each product" in {
         response.epoch shouldBe s"$epoch"
@@ -47,7 +47,7 @@ class AddressLookupFileListResponseSpec extends AnyWordSpec with Matchers {
       }
 
       val products = Seq(OSGBProduct("abp", epoch, files))
-      val response = AddressLookupFileListResponse(epoch.toString, products)
+      val response = AddressLookupFileListResponse(epoch.toString, products, batchTargetDirectory)
 
       "create two batches" in {
         response.epoch shouldBe s"$epoch"
@@ -82,7 +82,7 @@ class AddressLookupFileListResponseSpec extends AnyWordSpec with Matchers {
         s"${AddressLookup.outputPath}/$epoch/abp/0/abp3.file.done")
 
       val products = Seq(OSGBProduct("abp", epoch, files))
-      val response = AddressLookupFileListResponse(epoch.toString, products, doneFiles)
+      val response = AddressLookupFileListResponse(epoch.toString, products, batchTargetDirectory, doneFiles)
 
       "ignore the files that have already been downloaded" in {
         val batch1 = response.batches.head
@@ -98,5 +98,9 @@ class AddressLookupFileListResponseSpec extends AnyWordSpec with Matchers {
         responseStr.toString shouldBe expectedResponseStr
       }
     }
+  }
+
+  def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int): String = {
+    s"/mnt/efs/$epoch/$productName/$batchIndex"
   }
 }

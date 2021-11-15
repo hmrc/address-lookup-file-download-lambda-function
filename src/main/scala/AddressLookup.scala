@@ -7,29 +7,26 @@ import java.nio.file.{Files, Paths}
 import java.util.Base64
 import scala.collection.JavaConverters._
 
-object AddressLookup {
+class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash, val sardineWrapperF: (String, String) => SardineWrapper) {
 
-  val hfsUrl = new URL("https://hfs.os.uk/")
+  private def user: String = retrieveCredential("address_lookup_user")
 
-  def user = retrieveCredential("address_lookup_user")
-
-  def password = new String(
+  private def password: String = new String(
     Base64.getDecoder.decode(retrieveCredential("address_lookup_password"))).trim
 
-  val role = "address_lookup_file_download"
-  val outputPath = "/mnt/efs"
-  val productTypes = Seq("abp", "abi")
+  private val role: String = "address_lookup_file_download"
+  private val productTypes: Seq[String] = Seq("abp", "abi")
 
-  val context: java.util.Map[String, String] = {
+  private val context: java.util.Map[String, String] = {
     Map("role" -> role).asJava
   }
 
-  def retrieveCredential(credName: String): String = {
-    new JCredStash().getSecret("credential-store", credName, context)
+  private def retrieveCredential(credName: String): String = {
+    credstash().getSecret("credential-store", credName, context)
   }
 
-  def sardineWrapper: SardineWrapper = {
-    new SardineWrapper(hfsUrl, user, password, new SardineFactory2)
+  private def sardineWrapper: SardineWrapper = {
+    sardineWrapperF(user, password)
   }
 
   def webDavFetcher: WebdavFetcher = {
@@ -47,7 +44,7 @@ object AddressLookup {
   }
 
   def listAllProductsAvailableToDownload(requestedEpoch: Option[String]): Seq[OSGBProduct] =
-    AddressLookup.productTypes.flatMap { p =>
+    productTypes.flatMap { p =>
       if (requestedEpoch.isEmpty)
         sardineWrapper.exploreRemoteTree.findLatestFor(p)
       else
@@ -57,13 +54,13 @@ object AddressLookup {
   def listFiles(requestedEpoch: Option[String], forceDownload: Boolean): AddressLookupFileListResponse = {
     val products = listAllProductsAvailableToDownload(requestedEpoch)
     val epoch = requestedEpoch.fold(products.head.epoch.toString)(identity)
-    val filesAlreadyDownloaded = if (forceDownload) Seq() else AddressLookup.listAllDoneFiles(epoch)
+    val filesAlreadyDownloaded = if (forceDownload) Seq() else listAllDoneFiles(epoch)
 
     // If products is empty this means that epoch does not exist on the remote server
     // so we try to reconstruct the batch info by looking at what we've got downloaded
     products match {
       case Seq() => AddressLookupFileListResponse(epoch, batchesFromDoneFiles(filesAlreadyDownloaded))
-      case _     => AddressLookupFileListResponse(epoch, products, filesAlreadyDownloaded)
+      case _     => AddressLookupFileListResponse(epoch, products, batchTargetDirectory, filesAlreadyDownloaded)
     }
   }
 
@@ -75,7 +72,7 @@ object AddressLookup {
   def downloadFilesToOutputDirectory(targetDirectory: String, fileUrls: Seq[String]): String = {
     fileUrls.foreach { f =>
       println(s"Downloading $f to $targetDirectory")
-      AddressLookup.downloadFileToOutputDirectory(targetDirectory, f)
+      downloadFileToOutputDirectory(targetDirectory, f)
     }
     targetDirectory
   }
@@ -92,6 +89,12 @@ object AddressLookup {
   }
 
   def batchTargetDirectory(productName: String, epoch: Int, batchIndex: Int): String = {
-    s"${AddressLookup.outputPath}/$epoch/$productName/$batchIndex"
+    s"${outputPath}/$epoch/$productName/$batchIndex"
   }
+}
+
+object AddressLookup extends AddressLookupBase(
+  outputPath = "/mnt/efs",
+  credstash = () => new JCredStash(),
+  sardineWrapperF = (user, passwd) => new SardineWrapper(url = new URL("https://hfs.os.uk/"), username = user, password = passwd, factory = new SardineFactory2())) {
 }
