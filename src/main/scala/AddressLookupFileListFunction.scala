@@ -8,7 +8,7 @@ class AddressLookupFileListFunction extends RequestHandler[JMap[String, Object],
   override def handleRequest(requestMap: JMap[String, Object], context: Context): JMap[String, Object] = {
     val scalaMap = requestMap.asScala
     val epoch = scalaMap.get("epoch").map(_.asInstanceOf[String])
-    val forceDownload = scalaMap.contains("forceDownload")
+    val forceDownload = scalaMap.getOrElse("forceDownload", false).asInstanceOf[Boolean]
 
     // We should only ever get one epoch back from listAllFileUrlsToDownload
     val addressLookupFileListResponse = AddressLookup.listFiles(epoch, forceDownload)
