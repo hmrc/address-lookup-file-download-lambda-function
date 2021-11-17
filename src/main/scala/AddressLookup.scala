@@ -1,4 +1,4 @@
-import fetch.{OSGBProduct, SardineFactory2, SardineWrapper, WebdavFetcher}
+import fetch.{SardineFactory2, SardineWrapper, WebdavFetcher}
 import me.lamouri.JCredStash
 
 import java.io.File
@@ -43,16 +43,8 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
               .toList
   }
 
-  def listAllProductsAvailableToDownload(requestedEpoch: Option[String]): Seq[OSGBProduct] =
-    productTypes.flatMap { p =>
-      if (requestedEpoch.isEmpty)
-        sardineWrapper.exploreRemoteTree.findLatestFor(p)
-      else
-        sardineWrapper.exploreRemoteTree.findAvailableFor(p, requestedEpoch.map(_.toInt).get)
-    }
-
   def listFiles(requestedEpoch: Option[String], forceDownload: Boolean): AddressLookupFileListResponse = {
-    val products = listAllProductsAvailableToDownload(requestedEpoch)
+    val products = sardineWrapper.listAllProductsAvailableToDownload(productTypes, requestedEpoch)
     val epoch = requestedEpoch.fold(products.head.epoch.toString)(identity)
     val filesAlreadyDownloaded = if (forceDownload) Seq() else listAllDoneFiles(epoch)
 

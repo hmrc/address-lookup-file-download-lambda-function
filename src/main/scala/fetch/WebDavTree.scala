@@ -91,7 +91,7 @@ case class WebDavTree(root: WebDavFile) {
     else {
       val fullFolder = optFullFolder.get
       val readyToCollect = fullFolder.find(readyToCollectFile).isDefined
-      if (readyToCollect) Some(OSGBProduct(product, epoch.fullName.toInt, filterZips(fullFolder.files)))
+      if (readyToCollect) Some(OSGBProduct(product, epoch.fullName.toInt, filterZips(fullFolder.files).map(_.url)))
       else None
     }
   }
@@ -110,7 +110,3 @@ case class WebDavTree(root: WebDavFile) {
 object WebDavTree {
   val readyToCollectFile = "ready-to-collect.txt"
 }
-
-
-
-

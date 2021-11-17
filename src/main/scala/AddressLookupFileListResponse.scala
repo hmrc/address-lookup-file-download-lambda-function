@@ -1,7 +1,7 @@
 import fetch.OSGBProduct
 
 import java.net.URL
-import java.util.{Map => JMap, List => JList}
+import java.util.{List => JList, Map => JMap}
 
 case class AddressLookupFileListResponse(epoch: String, batches: Seq[Batch])
 
@@ -11,7 +11,6 @@ object AddressLookupFileListResponse {
   def apply(epoch: String, osgbProducts: Seq[OSGBProduct], batchTargetDirectoryFn: (String, Int, Int) => String, filesAlreadyDownloaded: Seq[String] = Seq()): AddressLookupFileListResponse = {
     val products = osgbProducts.flatMap { p =>
       p.zips
-       .map(_.url)
        .grouped(25)
        .zipWithIndex
        .map { case (files, idx) =>
