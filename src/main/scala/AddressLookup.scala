@@ -88,5 +88,10 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
 object AddressLookup extends AddressLookupBase(
   outputPath = "/mnt/efs",
   credstash = () => new JCredStash(),
-  sardineWrapperF = (user, passwd) => new SardineWrapper(url = new URL("https://hfs.os.uk/"), username = user, password = passwd, factory = new SardineFactory2())) {
+  sardineWrapperF =
+    (user, passwd) => new SardineWrapper(
+      url = new URL("https://hfs.os.uk/"),
+      username = user,
+      password = passwd,
+      factory = new SardineFactory2())) {
 }

@@ -16,9 +16,14 @@ class AddressLookupSpec extends AnyWordSpec with Matchers with MockitoSugar {
     val sardineWrapper = mock[SardineWrapper]
     val credstash = mock[JCredStash]
 
-    val fileToTest = "AddressBasePremium_ISL_FULL_2021-09-29_001_csv.zip"
-    val fileUrlToTest = new URL("https://hfs.os.uk/abi/88/full/data/" + fileToTest)
-    val outputRootPath = createOutputPathAndFile(fileToTest)
+    val filesToTest = Seq(
+      "abi" -> "AddressBasePremium_ISL_FULL_2021-09-29_001_csv.zip",
+      "abi" -> "AddressBasePremium_ISL_FULL_2021-09-29_002_csv.zip",
+      "abp" -> "AddressBasePremium_FULL_2021-09-29_001_csv.zip",
+      "abp" -> "AddressBasePremium_FULL_2021-09-29_002_csv.zip"
+    )
+    val fileUrlToTest = filesToTest.map{ case(p, f) => new URL(s"https://hfs.os.uk/${p}/88/full/data/${f}")}
+    val outputRootPath = createOutputPathAndFile(filesToTest)
     val addressLookup = new AddressLookupBase(outputPath = outputRootPath, () => credstash, (a, b) => sardineWrapper)
     val epoch = 88
 
@@ -37,29 +42,31 @@ class AddressLookupSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "return a full list of file to download" when {
       "listFiles is called with forceDownload=true" in {
         val response = addressLookup.listFiles(Some(epoch.toString), true)
-        response.batches.flatMap(_.files) should contain(fileUrlToTest)
+        response.batches.flatMap(_.files) should contain allElementsOf fileUrlToTest
       }
     }
 
     "return a partiall list of file to download the don't include already downloaded ones" when {
       "listFiles is called with forceDownload=false" in {
         val response = addressLookup.listFiles(Some(epoch.toString), false)
-        response.batches.flatMap(_.files) should not contain fileUrlToTest
+        response.batches.flatMap(_.files) should not contain allElementsOf (fileUrlToTest)
       }
     }
   }
 
-  private def createOutputPathAndFile(fileName: String): String = {
-    val doneFileName = s"${fileName}.done"
+  private def createOutputPathAndFile(filesToCreate: Seq[(String, String)]): String = {
     val outputRootPath = sys.props("java.io.tmpdir").replaceAll("/$", "")
-    val outputDataPath = outputRootPath + s"88/abi/0/"
-    val doneFilePath = outputDataPath + doneFileName
+    filesToCreate.foreach {
+      case (product, fileName) =>
+        val doneFileName = s"${fileName}.done"
+        val outputDataPath = outputRootPath + s"88/$product/0/"
+        val doneFilePath = outputDataPath + doneFileName
 
-    new File(outputDataPath).mkdirs()
-    if (!Files.exists(Paths.get(doneFilePath))) {
-      Files.createFile(Paths.get(doneFilePath))
+        new File(outputDataPath).mkdirs()
+        if (!Files.exists(Paths.get(doneFilePath))) {
+          Files.createFile(Paths.get(doneFilePath))
+        }
     }
-
     outputRootPath
   }
 }
