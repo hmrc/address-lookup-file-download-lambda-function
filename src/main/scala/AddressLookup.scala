@@ -46,7 +46,7 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
   def listFiles(requestedEpoch: Option[String], forceDownload: Boolean): AddressLookupFileListResponse = {
     val products = sardineWrapper.listAllProductsAvailableToDownload(productTypes, requestedEpoch)
     val epoch = requestedEpoch.fold(products.head.epoch.toString)(identity)
-    val filesAlreadyDownloaded = if (forceDownload) Seq() else listAllDoneFiles(epoch)
+    val filesAlreadyDownloaded = if (forceDownload) removeDownloadedFiles(epoch) else listAllDoneFiles(epoch)
 
     // If products is empty this means that epoch does not exist on the remote server
     // so we try to reconstruct the batch info by looking at what we've got downloaded
@@ -54,6 +54,20 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
       case Seq() => AddressLookupFileListResponse(epoch, batchesFromDoneFiles(filesAlreadyDownloaded))
       case _     => AddressLookupFileListResponse(epoch, products, batchTargetDirectory, filesAlreadyDownloaded)
     }
+  }
+
+  private def removeDownloadedFiles(epoch: String): Seq[String] = {
+    val epochPath = Paths.get(s"$outputPath/$epoch/")
+    if (epochPath.toFile.exists()) {
+      val (files, dirs) = Files.walk(epochPath)
+                               .iterator().asScala.toList
+                               .groupBy(s => s.toFile.isFile)
+                               .partition { case (t, _) => t }
+      files.head._2.toSeq.foreach(f => Files.deleteIfExists(f))
+      dirs.head._2.toSeq.reverse.foreach(d => Files.deleteIfExists(d))
+    }
+
+    Seq()
   }
 
   def batchesFromDoneFiles(doneFiles: Seq[String]): Seq[Batch] =

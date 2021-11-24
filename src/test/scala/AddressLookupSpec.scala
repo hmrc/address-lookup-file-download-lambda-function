@@ -39,17 +39,17 @@ class AddressLookupSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
     when(credstash.getSecret(any(), any(), any())).thenReturn("secret")
 
-    "return a full list of file to download" when {
-      "listFiles is called with forceDownload=true" in {
-        val response = addressLookup.listFiles(Some(epoch.toString), true)
-        response.batches.flatMap(_.files) should contain allElementsOf fileUrlToTest
-      }
-    }
-
     "return a partiall list of file to download the don't include already downloaded ones" when {
       "listFiles is called with forceDownload=false" in {
         val response = addressLookup.listFiles(Some(epoch.toString), false)
         response.batches.flatMap(_.files) shouldBe empty
+      }
+    }
+
+    "return a full list of file to download" when {
+      "listFiles is called with forceDownload=true" in {
+        val response = addressLookup.listFiles(Some(epoch.toString), true)
+        response.batches.flatMap(_.files) should contain allElementsOf fileUrlToTest
       }
     }
   }
