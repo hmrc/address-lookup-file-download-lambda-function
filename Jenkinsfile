@@ -24,7 +24,7 @@ pipeline {
     }
     stage ('Run cip-attval-terraform job') {
       steps {
-        build job: 'cip-attval-terraform/terraform-environments'
+        build job: 'attval/terraform/build-all-environments'
       }
     }
   }
