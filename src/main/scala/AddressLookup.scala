@@ -9,10 +9,11 @@ import scala.collection.JavaConverters._
 
 class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash, val sardineWrapperF: (String, String) => SardineWrapper) {
 
-  private def user: String = retrieveCredential("address_lookup_user")
+  private def user: String =
+    retrieveCredential("address_lookup_user").trim
 
-  private def password: String = new String(
-    Base64.getDecoder.decode(retrieveCredential("address_lookup_password"))).trim
+  private def password: String =
+    new String(Base64.getDecoder.decode(retrieveCredential("address_lookup_password"))).trim
 
   private val role: String = "address_lookup_file_download"
   private val productTypes: Seq[String] = Seq("abp", "abi")
