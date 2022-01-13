@@ -8,9 +8,14 @@ case class AddressLookupFileListResponse(epoch: String, batches: Seq[Batch])
 case class Batch(batchDir: String, files: List[URL])
 
 object AddressLookupFileListResponse {
-  def apply(epoch: String, osgbProducts: Seq[OSGBProduct], batchTargetDirectoryFn: (String, Int, Int) => String, filesAlreadyDownloaded: Seq[String] = Seq()): AddressLookupFileListResponse = {
+  def apply(epoch: String, osgbProducts: Seq[OSGBProduct], batchTargetDirectoryFn: (String, Int, Int) => String, filesAlreadyDownloaded: Seq[String] = Seq(), fileLimit: Option[Int]): AddressLookupFileListResponse = {
     val products = osgbProducts.flatMap { p =>
-      p.zips
+      val zips = fileLimit match {
+        case Some(limit) => p.zips.take(limit)
+        case _ => p.zips
+      }
+
+      zips
        .grouped(25)
        .zipWithIndex
        .map { case (files, idx) =>

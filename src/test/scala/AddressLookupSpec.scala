@@ -49,7 +49,7 @@ class AddressLookupSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "return a partiall list of file to download the don't include already downloaded ones" when {
       "listFiles is called with forceDownload=false" in {
         val response = addressLookup.listFiles(Some(epoch.toString), false)
-        response.batches.flatMap(_.files) should not contain allElementsOf (fileUrlToTest)
+        response.batches.flatMap(_.files) shouldBe Seq()
       }
     }
   }

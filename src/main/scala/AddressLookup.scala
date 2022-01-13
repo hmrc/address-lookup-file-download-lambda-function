@@ -43,7 +43,7 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
               .toList
   }
 
-  def listFiles(requestedEpoch: Option[String], forceDownload: Boolean): AddressLookupFileListResponse = {
+  def listFiles(requestedEpoch: Option[String], forceDownload: Boolean, fileLimit: Option[Int]): AddressLookupFileListResponse = {
     val products = sardineWrapper.listAllProductsAvailableToDownload(productTypes, requestedEpoch)
     val epoch = requestedEpoch.fold(products.head.epoch.toString)(identity)
     val filesAlreadyDownloaded = if (forceDownload) Seq() else listAllDoneFiles(epoch)
@@ -52,7 +52,7 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
     // so we try to reconstruct the batch info by looking at what we've got downloaded
     products match {
       case Seq() => AddressLookupFileListResponse(epoch, batchesFromDoneFiles(filesAlreadyDownloaded))
-      case _     => AddressLookupFileListResponse(epoch, products, batchTargetDirectory, filesAlreadyDownloaded)
+      case _     => AddressLookupFileListResponse(epoch, products, batchTargetDirectory, filesAlreadyDownloaded, fileLimit)
     }
   }
 

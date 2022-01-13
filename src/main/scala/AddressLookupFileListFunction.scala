@@ -9,9 +9,10 @@ class AddressLookupFileListFunction extends RequestHandler[JMap[String, Object],
     val scalaMap = requestMap.asScala
     val epoch = scalaMap.get("epoch").map(_.asInstanceOf[String])
     val forceDownload = scalaMap.getOrElse("forceDownload", false).asInstanceOf[Boolean]
+    val fileLimit = scalaMap.get("limitBatches").map(_.asInstanceOf[Int])
 
     // We should only ever get one epoch back from listAllFileUrlsToDownload
-    val addressLookupFileListResponse = AddressLookup.listFiles(epoch, forceDownload)
+    val addressLookupFileListResponse = AddressLookup.listFiles(epoch, forceDownload, fileLimit)
 
     addressLookupFileListResponse.asJava()
   }
