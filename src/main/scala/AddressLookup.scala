@@ -13,7 +13,7 @@ class AddressLookupBase(val outputPath: String, val credstash: () => JCredStash,
     retrieveCredential("address_lookup_user").trim
 
   private def password: String =
-    new String(Base64.getDecoder.decode(retrieveCredential("address_lookup_password"))).trim
+    new String(Base64.getDecoder.decode(retrieveCredential("address_lookup_password").trim)).trim
 
   private val role: String = "address_lookup_file_download"
   private val productTypes: Seq[String] = Seq("abp", "abi")
