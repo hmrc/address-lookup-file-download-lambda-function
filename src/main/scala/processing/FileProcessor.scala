@@ -2,6 +2,7 @@ package processing
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.nio.file.{Files, Path, Paths}
+import java.util.stream.Collectors
 import java.util.zip.ZipInputStream
 import scala.collection.JavaConverters._
 
@@ -54,6 +55,13 @@ class FileProcessor() extends FileOps {
         foutf
       }.toList
       outputDirectory -> result
+  }
+
+  def filesInBatch(batchRootDir: String): List[String] = {
+    Files.walk(Paths.get(batchRootDir))
+      .iterator().asScala
+      .filter(_.toFile.isFile)
+      .map(p => p.toFile.getAbsolutePath).toList
   }
 }
 
