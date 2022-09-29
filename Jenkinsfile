@@ -22,9 +22,9 @@ pipeline {
            """)
       }
     }
-    stage ('Run cip-attval-terraform job') {
+    stage ('Run cip-attrep-terraform job') {
       steps {
-        build job: 'attval/terraform/build-all-environments'
+        build job: 'attrep/terraform/build-all-environments'
       }
     }
   }
