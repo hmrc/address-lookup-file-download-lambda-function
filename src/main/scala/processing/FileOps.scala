@@ -2,6 +2,7 @@ package processing
 
 import java.nio.file.{Files, Paths}
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 trait FileOps {
   def cleanOldFiles(fileName: String): Unit = {
@@ -15,9 +16,8 @@ trait FileOps {
       filesAndFoldersToDelete.get(false).foreach(
         _.sortBy(_.getNameCount).reverse
           .foreach { folder =>
-            Files.deleteIfExists(folder)
+            Try(Files.deleteIfExists(folder))
           })
     }
   }
-
 }
