@@ -9,6 +9,23 @@ package object processing {
         f.mkdirs()
         f
       }
+
+      def checkMd5(requiredMd5: String): Boolean = {
+        MessageDigest.getInstance("MD5").md5Matches(f, requiredMd5)
+      }
+
+      def checkMinSize: Boolean = {
+        val actualSize = f.length()
+        val minSize = minSizeFor(f.getName)
+        println(s">>> actualSize: ${actualSize}, minSize: ${minSize}")
+        actualSize > minSize
+      }
+
+      private val filePattern = "AB..(GB|IS)_CSV.zip".r
+      private def minSizeFor(fileName: String): Long = fileName match {
+        case filePattern("GB") => 9500000000L
+        case filePattern("IS") => 150000000L
+      }
     }
 
     implicit class RichPath(p: Path) {
@@ -30,7 +47,9 @@ package object processing {
       }
 
       def md5Matches(f: File, md5: String): Boolean = {
-        md5ForFile(f) == md5
+        val actualMd5 = md5ForFile(f)
+        println(s">>> actualMd5: ${actualMd5}, requiredMd5: ${md5}")
+        actualMd5 == md5
       }
     }
 

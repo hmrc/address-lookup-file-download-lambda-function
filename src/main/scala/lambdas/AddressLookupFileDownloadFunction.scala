@@ -2,6 +2,7 @@ package lambdas
 
 import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 import processing.FileDownloader
+import processing.FileDownloader.model.{MD5NotMatched, SizeTooSmall, UnexpectedSize}
 
 import java.util
 import java.util.{Map => jMap}
@@ -26,15 +27,20 @@ class AddressLookupFileDownloadFunction extends RequestHandler[java.util.Map[Str
   }
 
   def doFileDownload(epochOverride: Option[String]): jMap[String, Object] = {
-    epochOverride.fold{
+    epochOverride.fold {
       val downloader = FileDownloader()
-      val (batchesRootDir, downloadedFiles) = downloader.download()
+      downloader.download() match {
+        case Left(UnexpectedSize(fileName)) => throw new IllegalStateException(s"actual size does not match for $fileName")
+        case Left(SizeTooSmall(fileName))   => throw new IllegalStateException(s"size condition not met for $fileName")
+        case Left(MD5NotMatched(fileName))  => throw new IllegalStateException(s"md5 mismatch for file $fileName")
+        case Right((batchesRootDir, downloadedFiles)) =>
 
-      Map(
-        "batchesRootDir" -> batchesRootDir,
-        "unpack" -> "true",
-        "downloadedFiles" -> downloadedFiles.toList.asJava).asJava
-    }{ epoch =>
+          Map(
+            "batchesRootDir" -> batchesRootDir,
+            "unpack" -> "true",
+            "downloadedFiles" -> downloadedFiles.toList.asJava).asJava
+      }
+    } { epoch =>
       Map(
         "batchesRootDir" -> s"${FileDownloader.outputRoot}/${epoch}",
         "unpack" -> "false",

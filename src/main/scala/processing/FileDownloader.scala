@@ -15,14 +15,17 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
   import FileDownloader._
   import model.implicits._
 
-  def download(): (String, List[String]) = {
+  def download(): Either[DownloadError, (String, List[String])] = {
     val dataPackages = listDataPackagesOfInterest()
 
-    val (abpBatchesRootDir, downloadedAbpFile) = doDownload(dataPackages, abp)
-    val (_, downloadedAbpIslandsFile) = doDownload(dataPackages, abpIslands)
-    val (rootDirForBatches, downloadedFiles) = (abpBatchesRootDir, List(downloadedAbpFile, downloadedAbpIslandsFile))
+    for {
+      abpDownload <- doDownload(dataPackages, abp)
+      abpIslandsDownload <- doDownload(dataPackages, abpIslands)
 
-    (rootDirForBatches, downloadedFiles)
+      (abpBatchesRootDir, downloadedAbpFile) = abpDownload
+      (_, downloadedAbpIslandsFile) = abpIslandsDownload
+
+    } yield ((abpBatchesRootDir, List(downloadedAbpFile, downloadedAbpIslandsFile)))
   }
 
 
@@ -40,7 +43,16 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
     cleanOldFiles(s"$outputRoot/${latestVersion.productVersion}")
     val downloadedFile = download(uri"${downloadForLatestVersion.url}", downloadForLatestVersion.fileName)
 
-    (s"${outputRoot}/${latestVersion.productVersion.dbSafe}", downloadedFile.getAbsolutePath)
+    if (downloadedFile.length() != downloadForLatestVersion.size) {
+      println(s">>> actualSize: ${downloadedFile.length()} <> givenSize: ${downloadForLatestVersion.size}")
+      Left((UnexpectedSize(downloadForLatestVersion.fileName)))
+    } else if (!downloadedFile.checkMinSize) {
+      Left((SizeTooSmall(downloadForLatestVersion.fileName)))
+    } else if (!downloadedFile.checkMd5(downloadForLatestVersion.md5)) {
+      Left((MD5NotMatched(downloadForLatestVersion.fileName)))
+    } else {
+      Right((s"${outputRoot}/${latestVersion.productVersion.dbSafe}", downloadedFile.getAbsolutePath))
+    }
   }
 
   private def listDataPackagesOfInterest(): List[DataPackage] = {
@@ -100,5 +112,10 @@ object FileDownloader {
       implicit val dataPackageVersionFormat: Format[DataPackageVersion] = Json.format[DataPackageVersion]
       implicit val dataPackageFormat: Format[DataPackage] = Json.format[DataPackage]
     }
+
+    sealed trait DownloadError
+    case class MD5NotMatched(fileName: String) extends DownloadError
+    case class UnexpectedSize(fileName: String) extends DownloadError
+    case class SizeTooSmall(fileName: String) extends DownloadError
   }
 }
