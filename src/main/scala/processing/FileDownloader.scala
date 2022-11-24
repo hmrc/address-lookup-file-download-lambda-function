@@ -61,13 +61,20 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
   }
 
   private def body[A](url: Uri)(implicit format: Format[A]): A = {
+    val responseBodyText = get(url).body
+    println(s">>> result of call to '${url}': ${redactKey(responseBodyText)}")
     val jsRes = Json.fromJson[A](
-      Json.parse(get(url).body)
+
+      Json.parse(responseBodyText)
     )
     jsRes match {
       case JsSuccess(value, _) => value
       case JsError(errors)     => throw new Exception(errors.mkString)
     }
+  }
+
+  private def redactKey(text: String): String = {
+    text.replaceAll(s"key=$authKey", "key=****")
   }
 
   private def get(url: Uri): Identity[Response[String]] = {
