@@ -3,7 +3,7 @@ package services
 import com.amazonaws.secretsmanager.caching.SecretCache
 import play.api.libs.json.Json
 
-class SecretsManagerService() {
+class SecretsManagerService {
 
   val secretCache: SecretCache = new SecretCache()
 
