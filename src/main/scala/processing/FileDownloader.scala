@@ -2,6 +2,7 @@ package processing
 
 import play.api.libs.json._
 import processing.FileDownloader.model._
+import services.SecretsManagerService
 import sttp.client3.quick._
 import sttp.client3.{HttpURLConnectionBackend, Identity, Response, SttpBackend}
 import sttp.model.Uri
@@ -92,14 +93,14 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
 
 object FileDownloader {
   def apply(): FileDownloader = {
-    val creds = new Credentials()
-    val apiKey = creds.secret(authKeySecretKey)
     val syncBackend = HttpURLConnectionBackend()
+    val secretsManager = new SecretsManagerService()
+    val apiKey = secretsManager.getSecret(authKeySecretKey)
 
     new FileDownloader(apiKey, syncBackend)
   }
 
-  val authKeySecretKey = "address_lookup_osdatahub_auth_key"
+  val authKeySecretKey = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
   val baseUrl = "https://api.os.uk/downloads/v1/dataPackages"
   val abp = "AB Prem (Full)"
   val abpIslands = "AB Prem Islands (Full)"
