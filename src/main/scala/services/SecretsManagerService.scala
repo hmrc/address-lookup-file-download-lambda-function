@@ -7,10 +7,10 @@ class SecretsManagerService {
 
   val secretCache: SecretCache = new SecretCache()
 
-  def getSecret(secretId: String): String = {
-    val secretString = secretCache.getSecretString(secretId)
+  def getSecret(secretName: String, secretKey: String): String = {
+    val secretString = secretCache.getSecretString(secretName)
     val secretAsJSON = Json.parse(secretString)
 
-    secretAsJSON("secret").as[String]
+    secretAsJSON(secretKey).as[String]
   }
 }

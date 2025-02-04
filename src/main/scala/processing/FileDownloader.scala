@@ -95,12 +95,13 @@ object FileDownloader {
   def apply(): FileDownloader = {
     val syncBackend = HttpURLConnectionBackend()
     val secretsManager = new SecretsManagerService()
-    val apiKey = secretsManager.getSecret(authKeySecretKey)
+    val apiKey = secretsManager.getSecret(secretName, secretKey)
 
     new FileDownloader(apiKey, syncBackend)
   }
 
-  val authKeySecretKey = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
+  val secretName = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
+  val secretKey = "secret"
   val baseUrl = "https://api.os.uk/downloads/v1/dataPackages"
   val abp = "AB Prem (Full)"
   val abpIslands = "AB Prem Islands (Full)"

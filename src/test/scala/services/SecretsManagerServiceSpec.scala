@@ -9,48 +9,47 @@ import org.scalatestplus.mockito.MockitoSugar
 class SecretsManagerServiceSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   "SecretsManagerService" should {
+    val secretName = "validSecretName"
+    val secretKey = "secret"
 
-    "return the secret value when secretId is valid" in {
-      val secretId = "validSecretId"
+    "return the secret value when secretName is valid" in {
       val secretString = """{"secret": "mySecretValue"}"""
 
       val mockSecretCache = mock[SecretCache]
-      when(mockSecretCache.getSecretString(secretId)).thenReturn(secretString)
+      when(mockSecretCache.getSecretString(secretName)).thenReturn(secretString)
 
       val service = new SecretsManagerService {
         override val secretCache: SecretCache = mockSecretCache
       }
 
-      val result = service.getSecret(secretId)
+      val result = service.getSecret(secretName, secretKey)
       result shouldEqual "mySecretValue"
     }
 
     "throw an exception when secret string is not a valid JSON" in {
-      val secretId = "validSecretId"
       val secretString = """invalidJson"""
 
       val mockSecretCache = mock[SecretCache]
-      when(mockSecretCache.getSecretString(secretId)).thenReturn(secretString)
+      when(mockSecretCache.getSecretString(secretName)).thenReturn(secretString)
 
       val service = new SecretsManagerService {
         override val secretCache: SecretCache = mockSecretCache
       }
 
-      an[Exception] should be thrownBy service.getSecret(secretId)
+      an[Exception] should be thrownBy service.getSecret(secretName, secretKey)
     }
 
     "throw an exception when secret key is missing in JSON" in {
-      val secretId = "validSecretId"
       val secretString = """{"someOtherKey": "mySecretValue"}"""
 
       val mockSecretCache = mock[SecretCache]
-      when(mockSecretCache.getSecretString(secretId)).thenReturn(secretString)
+      when(mockSecretCache.getSecretString(secretName)).thenReturn(secretString)
 
       val service = new SecretsManagerService {
         override val secretCache: SecretCache = mockSecretCache
       }
 
-      an[NoSuchElementException] should be thrownBy service.getSecret(secretId)
+      an[NoSuchElementException] should be thrownBy service.getSecret(secretName, secretKey)
     }
   }
 }
