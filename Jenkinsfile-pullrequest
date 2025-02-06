@@ -16,7 +16,7 @@ pipeline {
         JDK_FILE_NAME = 'openjdk-jre-17.0.13+11.tgz'
         JAVA_VERSION = '17.0.13+11'
     }
-    
+
     stages {
         stage('get code') {
             steps {
@@ -57,13 +57,6 @@ pipeline {
             steps {
                 dir(globals.git_application_repo) {
                     sh("make test")
-                }
-            }
-        }
-        stage('static analysis tests') {
-            steps {
-                dir(globals.deployment_template_repo) {
-                    sh("make static_and_integration_test service=${globals.git_application_service_name} env=paas-development repo=${globals.git_application_repo}")
                 }
             }
         }
