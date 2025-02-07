@@ -26,7 +26,7 @@ class AddressLookupFileDownloadFunction extends RequestHandler[java.util.Map[Str
     doFileDownload(epochOverride)
   }
 
-  def doFileDownload(epochOverride: Option[String]): jMap[String, Object] = {
+  private def doFileDownload(epochOverride: Option[String]): jMap[String, Object] = {
     epochOverride.fold {
       val downloader = FileDownloader()
       downloader.download() match {
@@ -38,11 +38,11 @@ class AddressLookupFileDownloadFunction extends RequestHandler[java.util.Map[Str
           Map(
             "batchesRootDir" -> batchesRootDir,
             "unpack" -> "true",
-            "downloadedFiles" -> downloadedFiles.toList.asJava).asJava
+            "downloadedFiles" -> downloadedFiles.asJava).asJava
       }
     } { epoch =>
       Map(
-        "batchesRootDir" -> s"${FileDownloader.outputRoot}/${epoch}",
+        "batchesRootDir" -> s"${FileDownloader.outputRoot}/$epoch",
         "unpack" -> "false",
         "epoch" -> epoch,
         "downloadedFiles" -> new util.ArrayList[Object]().asInstanceOf[Object]).asJava

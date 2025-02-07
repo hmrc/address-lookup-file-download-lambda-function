@@ -2,6 +2,7 @@ package processing
 
 import play.api.libs.json._
 import processing.FileDownloader.model._
+import services.SecretsManagerService
 import sttp.client3.quick._
 import sttp.client3.{HttpURLConnectionBackend, Identity, Response, SttpBackend}
 import sttp.model.Uri
@@ -25,7 +26,7 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
       (abpBatchesRootDir, downloadedAbpFile) = abpDownload
       (_, downloadedAbpIslandsFile) = abpIslandsDownload
 
-    } yield ((abpBatchesRootDir, List(downloadedAbpFile, downloadedAbpIslandsFile)))
+    } yield (abpBatchesRootDir, List(downloadedAbpFile, downloadedAbpIslandsFile))
   }
 
 
@@ -45,24 +46,24 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
 
     if (downloadedFile.length() != downloadForLatestVersion.size) {
       println(s">>> actualSize: ${downloadedFile.length()} <> givenSize: ${downloadForLatestVersion.size}")
-      Left((UnexpectedSize(downloadForLatestVersion.fileName)))
+      Left(UnexpectedSize(downloadForLatestVersion.fileName))
     } else if (!downloadedFile.checkMinSize) {
-      Left((SizeTooSmall(downloadForLatestVersion.fileName)))
+      Left(SizeTooSmall(downloadForLatestVersion.fileName))
     } else if (!downloadedFile.checkMd5(downloadForLatestVersion.md5)) {
-      Left((MD5NotMatched(downloadForLatestVersion.fileName)))
+      Left(MD5NotMatched(downloadForLatestVersion.fileName))
     } else {
-      Right((s"${outputRoot}/${latestVersion.productVersion.dbSafe}", downloadedFile.getAbsolutePath))
+      Right((s"$outputRoot/${latestVersion.productVersion.dbSafe}", downloadedFile.getAbsolutePath))
     }
   }
 
   private def listDataPackagesOfInterest(): List[DataPackage] = {
-    body[List[DataPackage]](uri"${baseUrl}?key=${authKey}")
+    body[List[DataPackage]](uri"$baseUrl?key=$authKey")
       .filter(dp => packagesOfInterest.contains(dp.name))
   }
 
   private def body[A](url: Uri)(implicit format: Format[A]): A = {
     val responseBodyText = get(url).body
-    println(s">>> result of call to '${url}': ${redactKey(responseBodyText)}")
+    println(s">>> result of call to '$url': ${redactKey(responseBodyText)}")
     val jsRes = Json.fromJson[A](
 
       Json.parse(responseBodyText)
@@ -82,8 +83,8 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
   }
 
   private def download(url: Uri, fileName: String): File = {
-    val downloadedFile = new File(s"${downloadRoot}/${fileName}")
-    quickRequest.get(uri"${url}")
+    val downloadedFile = new File(s"$downloadRoot/$fileName")
+    quickRequest.get(uri"$url")
       .response(asFile(downloadedFile))
       .send(backend)
     downloadedFile
@@ -92,20 +93,21 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
 
 object FileDownloader {
   def apply(): FileDownloader = {
-    val creds = new Credentials()
-    val apiKey = creds.secret(authKeySecretKey)
     val syncBackend = HttpURLConnectionBackend()
+    val secretsManager = new SecretsManagerService()
+    val apiKey = secretsManager.getSecret(secretName, secretKey)
 
     new FileDownloader(apiKey, syncBackend)
   }
 
-  val authKeySecretKey = "address_lookup_osdatahub_auth_key"
+  val secretName = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
+  val secretKey = "secret"
   val baseUrl = "https://api.os.uk/downloads/v1/dataPackages"
   val abp = "AB Prem (Full)"
   val abpIslands = "AB Prem Islands (Full)"
   val packagesOfInterest: Set[String] = Set(abp, abpIslands)
   val outputRoot = "/mnt/efs"
-  val downloadRoot = s"${outputRoot}/download"
+  val downloadRoot = s"$outputRoot/download"
 
   object model {
     case class DataPackage(id: String, name: String, url: String, versions: List[DataPackageVersion])
