@@ -2,11 +2,10 @@ package services
 
 import com.amazonaws.secretsmanager.caching.SecretCache
 import org.mockito.Mockito.when
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
+import utils.BaseSpec
 
-class SecretsManagerServiceSpec extends AnyWordSpec with Matchers with MockitoSugar {
+
+class SecretsManagerServiceSpec extends BaseSpec {
 
   "SecretsManagerService" should {
     val secretName = "validSecretName"
@@ -18,9 +17,7 @@ class SecretsManagerServiceSpec extends AnyWordSpec with Matchers with MockitoSu
       val mockSecretCache = mock[SecretCache]
       when(mockSecretCache.getSecretString(secretName)).thenReturn(secretString)
 
-      val service = new SecretsManagerService {
-        override val secretCache: SecretCache = mockSecretCache
-      }
+      val service = new SecretsManagerService(mockSecretCache)
 
       val result = service.getSecret(secretName, secretKey)
       result shouldEqual "mySecretValue"
@@ -32,9 +29,7 @@ class SecretsManagerServiceSpec extends AnyWordSpec with Matchers with MockitoSu
       val mockSecretCache = mock[SecretCache]
       when(mockSecretCache.getSecretString(secretName)).thenReturn(secretString)
 
-      val service = new SecretsManagerService {
-        override val secretCache: SecretCache = mockSecretCache
-      }
+      val service = new SecretsManagerService(mockSecretCache)
 
       an[Exception] should be thrownBy service.getSecret(secretName, secretKey)
     }
@@ -45,9 +40,7 @@ class SecretsManagerServiceSpec extends AnyWordSpec with Matchers with MockitoSu
       val mockSecretCache = mock[SecretCache]
       when(mockSecretCache.getSecretString(secretName)).thenReturn(secretString)
 
-      val service = new SecretsManagerService {
-        override val secretCache: SecretCache = mockSecretCache
-      }
+      val service = new SecretsManagerService(mockSecretCache)
 
       an[NoSuchElementException] should be thrownBy service.getSecret(secretName, secretKey)
     }
