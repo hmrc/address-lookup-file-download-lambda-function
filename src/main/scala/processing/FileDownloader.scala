@@ -63,7 +63,7 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
 
   private def body[A](url: Uri)(implicit format: Format[A]): A = {
     val responseBodyText = get(url).body
-    println(s">>> result of call to '$url': ${redactKey(responseBodyText)}")
+    println(s">>> result of call to '${redactKey(url.toString)}': ${redactKey(responseBodyText)}")
     val jsRes = Json.fromJson[A](
 
       Json.parse(responseBodyText)
