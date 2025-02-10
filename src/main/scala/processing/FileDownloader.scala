@@ -1,6 +1,7 @@
 package processing
 
 import com.amazonaws.secretsmanager.caching.SecretCache
+import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
 import play.api.libs.json._
 import processing.FileDownloader.model._
 import services.SecretsManagerService
@@ -97,7 +98,10 @@ class FileDownloader(
 object FileDownloader {
   def apply(): FileDownloader = {
     val syncBackend = HttpURLConnectionBackend()
-    val secretsManagerService = new SecretsManagerService(new SecretCache)
+
+    val awsClientBuilder: AWSSecretsManagerClientBuilder = AWSSecretsManagerClientBuilder.standard().withRegion("eu-west-2")
+    val secretsManagerService = new SecretsManagerService(new SecretCache(awsClientBuilder))
+
     val apiKey = secretsManagerService.getSecret(secretName, secretKey)
 
     new FileDownloader(apiKey, secretsManagerService, syncBackend)
