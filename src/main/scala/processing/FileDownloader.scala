@@ -1,5 +1,6 @@
 package processing
 
+import com.amazonaws.secretsmanager.caching.SecretCache
 import play.api.libs.json._
 import processing.FileDownloader.model._
 import services.SecretsManagerService
@@ -11,7 +12,10 @@ import java.io.File
 import java.time.LocalDate
 
 
-class FileDownloader(private val authKey: String, private val backend: SttpBackend[Identity, Any]) extends FileOps {
+class FileDownloader(
+                      private val authKey: String,
+                      private val secretsManagerService: SecretsManagerService,
+                      private val backend: SttpBackend[Identity, Any]) extends FileOps {
 
   import FileDownloader._
   import model.implicits._
@@ -63,18 +67,17 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
 
   private def body[A](url: Uri)(implicit format: Format[A]): A = {
     val responseBodyText = get(url).body
-    println(s">>> result of call to '$url': ${redactKey(responseBodyText)}")
-    val jsRes = Json.fromJson[A](
+    println(s">>> result of call to '${redactKey(url.toString)}': ${redactKey(responseBodyText)}")
 
-      Json.parse(responseBodyText)
-    )
+    val jsRes = Json.fromJson[A](Json.parse(responseBodyText))
+
     jsRes match {
       case JsSuccess(value, _) => value
       case JsError(errors)     => throw new Exception(errors.mkString)
     }
   }
 
-  private def redactKey(text: String): String = {
+  protected[processing] def redactKey(text: String): String = {
     text.replaceAll(s"key=$authKey", "key=****")
   }
 
@@ -94,10 +97,10 @@ class FileDownloader(private val authKey: String, private val backend: SttpBacke
 object FileDownloader {
   def apply(): FileDownloader = {
     val syncBackend = HttpURLConnectionBackend()
-    val secretsManager = new SecretsManagerService()
-    val apiKey = secretsManager.getSecret(secretName, secretKey)
+    val secretsManagerService = new SecretsManagerService(new SecretCache)
+    val apiKey = secretsManagerService.getSecret(secretName, secretKey)
 
-    new FileDownloader(apiKey, syncBackend)
+    new FileDownloader(apiKey, secretsManagerService, syncBackend)
   }
 
   val secretName = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
