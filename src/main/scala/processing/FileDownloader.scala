@@ -24,8 +24,8 @@ class FileDownloader(
     val dataPackages = listDataPackagesOfInterest()
 
     for {
-      abpDownload <- doDownload(dataPackages, abp)
-      abpIslandsDownload <- doDownload(dataPackages, abpIslands)
+      abpDownload <- doDownload(dataPackages, abpId)
+      abpIslandsDownload <- doDownload(dataPackages, abpIslandsId)
 
       (abpBatchesRootDir, downloadedAbpFile) = abpDownload
       (_, downloadedAbpIslandsFile) = abpIslandsDownload
@@ -34,10 +34,10 @@ class FileDownloader(
   }
 
 
-  private def doDownload(dataPackages: List[DataPackage], dataset: String) = {
+  private def doDownload(dataPackages: List[DataPackage], datasetId: String) = {
     import implicits._
 
-    val abpPackage = dataPackages.find(_.name == dataset)
+    val abpPackage = dataPackages.find(_.id == datasetId)
 
     val latestVersionDescription = abpPackage.get.versions.sortWith { case (a, b) => a.createdOn.isAfter(b.createdOn) }.head
     val latestVersion = body[DataPackageVersion](uri"${latestVersionDescription.url}")
@@ -62,7 +62,7 @@ class FileDownloader(
 
   private def listDataPackagesOfInterest(): List[DataPackage] = {
     body[List[DataPackage]](uri"$baseUrl?key=$authKey")
-      .filter(dp => packagesOfInterest.contains(dp.name))
+      .filter(dp => packagesOfInterest.contains(dp.id))
   }
 
   private def body[A](url: Uri)(implicit format: Format[A]): A = {
@@ -106,9 +106,9 @@ object FileDownloader {
   val secretName = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
   val secretKey = "secret"
   val baseUrl = "https://api.os.uk/downloads/v1/dataPackages"
-  val abp = "AB Prem (Full)"
-  val abpIslands = "AB Prem Islands (Full)"
-  val packagesOfInterest: Set[String] = Set(abp, abpIslands)
+  val abpId = "0040160174" //  AB Prem (Full) - using data package id since the name can change in api response
+  val abpIslandsId = "0040160173" // AB Prem Islands (Full) - see above ^
+  val packagesOfInterest: Set[String] = Set(abpId, abpIslandsId)
   val outputRoot = "/mnt/efs"
   val downloadRoot = s"$outputRoot/download"
 
