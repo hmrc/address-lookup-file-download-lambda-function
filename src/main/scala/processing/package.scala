@@ -1,8 +1,13 @@
+import org.slf4j.{Logger, LoggerFactory}
+
 import java.io.File
 import java.nio.file.{Files, Path}
 import java.security.{DigestInputStream, MessageDigest}
 
 package object processing {
+
+  val logger: Logger = LoggerFactory.getLogger("processing")
+
   object implicits {
     implicit class RichFile(f: File) {
       def ensureDirsExist(): File = {
@@ -17,7 +22,7 @@ package object processing {
       def checkMinSize: Boolean = {
         val actualSize = f.length()
         val minSize = minSizeFor(f.getName)
-        println(s">>> actualSize: ${actualSize}, minSize: ${minSize}")
+        logger.info(s">>> actualSize: ${actualSize}, minSize: ${minSize}")
         actualSize > minSize
       }
 
@@ -48,7 +53,7 @@ package object processing {
 
       def md5Matches(f: File, md5: String): Boolean = {
         val actualMd5 = md5ForFile(f)
-        println(s">>> actualMd5: ${actualMd5}, requiredMd5: ${md5}")
+        logger.info(s">>> actualMd5: ${actualMd5}, requiredMd5: ${md5}")
         actualMd5 == md5
       }
     }
