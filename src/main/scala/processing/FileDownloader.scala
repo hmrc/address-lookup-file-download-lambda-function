@@ -2,6 +2,7 @@ package processing
 
 import com.amazonaws.secretsmanager.caching.SecretCache
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 import processing.FileDownloader.model._
 import services.SecretsManagerService
@@ -20,6 +21,8 @@ class FileDownloader(
 
   import FileDownloader._
   import model.implicits._
+
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   def download(): Either[DownloadError, (String, List[String])] = {
     val dataPackages = listDataPackagesOfInterest()
@@ -50,7 +53,7 @@ class FileDownloader(
     val downloadedFile = download(uri"${downloadForLatestVersion.url}", downloadForLatestVersion.fileName)
 
     if (downloadedFile.length() != downloadForLatestVersion.size) {
-      println(s">>> actualSize: ${downloadedFile.length()} <> givenSize: ${downloadForLatestVersion.size}")
+      logger.info(s">>> actualSize: ${downloadedFile.length()} <> givenSize: ${downloadForLatestVersion.size}")
       Left(UnexpectedSize(downloadForLatestVersion.fileName))
     } else if (!downloadedFile.checkMinSize) {
       Left(SizeTooSmall(downloadForLatestVersion.fileName))
@@ -68,7 +71,7 @@ class FileDownloader(
 
   private def body[A](url: Uri)(implicit format: Format[A]): A = {
     val responseBodyText = get(url).body
-    println(s">>> result of call to '${redactKey(url.toString)}': ${redactKey(responseBodyText)}")
+    logger.info(s">>> result of call to '${redactKey(url.toString)}': ${redactKey(responseBodyText)}")
 
     val jsRes = Json.fromJson[A](Json.parse(responseBodyText))
 

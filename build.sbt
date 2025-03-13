@@ -7,8 +7,7 @@ ThisBuild / assemblyJarName := "address-lookup-file-download-lambda-functions_2.
 ThisBuild / parallelExecution := false
 
 ThisBuild / assemblyMergeStrategy := {
-  case x @ PathList("module-info.class") =>
-    MergeStrategy.discard // from com/fasterxml/jackson libraries
+  case PathList("module-info.class")  => MergeStrategy.discard // from com/fasterxml/jackson libraries
   case x =>
     (assembly / assemblyMergeStrategy).value(x) // For all the other files, use the default sbt-assembly merge strategy
 }
