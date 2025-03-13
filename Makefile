@@ -1,5 +1,5 @@
 TARGET_PATH := target/scala-2.12
-ARTIFACT := address-lookup-file-download-lambda-functions_2.12-1.2
+ARTIFACT := address-lookup-file-download-lambda-functions_2.12-1.2.1
 
 test:
 	sbt test
