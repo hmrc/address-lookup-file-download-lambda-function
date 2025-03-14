@@ -1,8 +1,8 @@
 ThisBuild / name := "address-lookup-file-download-lambda-functions"
-ThisBuild / version := "1.2.1"
+ThisBuild / version := "1.2.1.1"
 ThisBuild / scalaVersion := "2.12.12"
 
-ThisBuild / assemblyJarName := "address-lookup-file-download-lambda-functions_2.12-1.2.1.jar"
+ThisBuild / assemblyJarName := "address-lookup-file-download-lambda-functions_2.12-1.2.1.1.jar"
 
 ThisBuild / parallelExecution := false
 
