@@ -9,7 +9,9 @@ package object processing {
   val logger: Logger = LoggerFactory.getLogger("processing")
 
   object implicits {
-    implicit class RichFile(f: File) {
+    private val filePattern = "AB..(GB|IS)_CSV.zip".r
+
+    extension (f: File) {
       def ensureDirsExist(): File = {
         f.mkdirs()
         f
@@ -26,7 +28,6 @@ package object processing {
         actualSize > minSize
       }
 
-      private val filePattern = "AB..(GB|IS)_CSV.zip".r
       private def minSizeFor(fileName: String): Long = fileName match {
         case filePattern("GB") => 9500000000L
         case filePattern("IS") => 150000000L
@@ -41,7 +42,7 @@ package object processing {
       }
     }
 
-    implicit class RichMessageDigest(md: MessageDigest) {
+    extension (md: MessageDigest) {
       def md5ForFile(f: File): String = {
         val buffer = new Array[Byte](4096)
         val dis = new DigestInputStream(Files.newInputStream(f.toPath), md)
