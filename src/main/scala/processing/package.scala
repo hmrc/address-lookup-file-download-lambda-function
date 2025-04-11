@@ -42,18 +42,19 @@ package object processing {
     }
 
     implicit class RichMessageDigest(md: MessageDigest) {
-      def md5ForFile(f: File): String = {
-        val buffer = new Array[Byte](4096)
+      private def md5ForFile(f: File): String = {
         val dis = new DigestInputStream(Files.newInputStream(f.toPath), md)
-        while (dis.available > 0) {
-          dis.read(buffer)
-        }
-        md.digest.map(b => String.format("%02x", Byte.box(b))).mkString
+        val buffer = new Array[Byte](8192)
+
+        while (dis.read(buffer) != -1) {}
+
+        md.digest.map("%02x".format(_)).mkString
       }
 
       def md5Matches(f: File, md5: String): Boolean = {
+        logger.info(s"Calculating MD5 for file: ${f.getAbsolutePath}")
         val actualMd5 = md5ForFile(f)
-        logger.info(s">>> actualMd5: ${actualMd5}, requiredMd5: ${md5}")
+        logger.info(s">>> actualMd5: $actualMd5, requiredMd5: $md5")
         actualMd5 == md5
       }
     }

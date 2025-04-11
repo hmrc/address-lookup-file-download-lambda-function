@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  AddressLookupFileDownloadFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: AddressLookupFileDownloadFunction
+      Runtime: java17
+      Handler: lambdas.AddressLookupFileDownloadFunction
+      CodeUri: target/scala-2.12/address-lookup-file-download-lambda-functions_2.12-1.2.2.jar
+      Timeout: 1800
+      MemorySize: 1024
+      Environment:
+        Variables:
+          JAVA_TOOL_OPTIONS: "-XX:-TieredCompilation"
+          #OSDATAHUB_AUTH_KEY: ""
+    Metadata:
+      BuildMethod: makefile

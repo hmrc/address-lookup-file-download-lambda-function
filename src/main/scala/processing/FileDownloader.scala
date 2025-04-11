@@ -14,15 +14,14 @@ import java.io.File
 import java.time.LocalDate
 
 
-class FileDownloader(
-                      private val authKey: String,
-                      private val secretsManagerService: SecretsManagerService,
-                      private val backend: SttpBackend[Identity, Any]) extends FileOps {
+class FileDownloader(private val authKey: String) extends FileOps {
 
   import FileDownloader._
   import model.implicits._
 
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
 
   def download(): Either[DownloadError, (String, List[String])] = {
     val dataPackages = listDataPackagesOfInterest()
@@ -91,23 +90,32 @@ class FileDownloader(
 
   private def download(url: Uri, fileName: String): File = {
     val downloadedFile = new File(s"$downloadRoot/$fileName")
+
+    logger.info(s"downloading file from ${redactKey(url.toString())} to $downloadedFile")
+
     quickRequest.get(uri"$url")
       .response(asFile(downloadedFile))
       .send(backend)
+
+    logger.info(s"downloaded file to $downloadedFile")
+
     downloadedFile
   }
 }
 
 object FileDownloader {
   def apply(): FileDownloader = {
-    val syncBackend = HttpURLConnectionBackend()
 
+    new FileDownloader(
+      sys.env.getOrElse("OSDATAHUB_AUTH_KEY", obtainAuthKey())
+    )
+  }
+
+  private def obtainAuthKey(): String = {
     val awsClientBuilder: AWSSecretsManagerClientBuilder = AWSSecretsManagerClientBuilder.standard().withRegion("eu-west-2")
     val secretsManagerService = new SecretsManagerService(new SecretCache(awsClientBuilder))
 
-    val apiKey = secretsManagerService.getSecret(secretName, secretKey)
-
-    new FileDownloader(apiKey, secretsManagerService, syncBackend)
+    secretsManagerService.getSecret(secretName, secretKey)
   }
 
   val secretName = "attrep-secret/address_lookup_file_download/address_lookup_osdatahub_auth_key"
