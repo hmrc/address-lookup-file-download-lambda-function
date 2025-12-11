@@ -1,13 +1,16 @@
 package processing
 
 import com.amazonaws.secretsmanager.caching.SecretCache
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 import processing.FileDownloader.model._
+import processing.implicits._
 import services.SecretsManagerService
-import sttp.client3.quick._
-import sttp.client3.{HttpURLConnectionBackend, Identity, Response, SttpBackend}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
+import sttp.client4.httpurlconnection.HttpURLConnectionBackend
+import sttp.client4.quick._
+import sttp.client4.{Response, SyncBackend}
 import sttp.model.Uri
 
 import java.io.File
@@ -21,7 +24,7 @@ class FileDownloader(private val authKey: String) extends FileOps {
 
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
+  val backend: SyncBackend = HttpURLConnectionBackend()
 
   def download(): Either[DownloadError, (String, List[String])] = {
     val dataPackages = listDataPackagesOfInterest()
@@ -84,7 +87,7 @@ class FileDownloader(private val authKey: String) extends FileOps {
     text.replaceAll(s"key=$authKey", "key=****")
   }
 
-  private def get(url: Uri): Identity[Response[String]] = {
+  private def get(url: Uri): Response[String] = {
     quickRequest.get(url).send(backend)
   }
 
@@ -112,7 +115,10 @@ object FileDownloader {
   }
 
   private def obtainAuthKey(): String = {
-    val awsClientBuilder: AWSSecretsManagerClientBuilder = AWSSecretsManagerClientBuilder.standard().withRegion("eu-west-2")
+    val awsClientBuilder: SecretsManagerClient = SecretsManagerClient
+      .builder()
+      .region(Region.EU_WEST_2)
+      .build()
     val secretsManagerService = new SecretsManagerService(new SecretCache(awsClientBuilder))
 
     secretsManagerService.getSecret(secretName, secretKey)

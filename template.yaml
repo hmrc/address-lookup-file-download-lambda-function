@@ -5,9 +5,9 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: AddressLookupFileDownloadFunction
-      Runtime: java17
+      Runtime: java21
       Handler: lambdas.AddressLookupFileDownloadFunction
-      CodeUri: target/scala-2.12/address-lookup-file-download-lambda-functions_2.12-1.2.2.jar
+      CodeUri: target/scala-3.3.7/address-lookup-file-download-lambda-functions_3-2.0.0.jar
       Timeout: 1800
       MemorySize: 1024
       Environment:
